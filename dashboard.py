@@ -257,86 +257,83 @@ st.write("")
 
 row2_col1,row2_col2,row2_col3=st.columns([2,2,1.7])
 
-# 1) ACTIVE ALERTS (fixed height + scroll + light background)
+# 1) ACTIVE ALERTS – log style like Recent Detection Events
 with row2_col1:
     st.markdown("#### Active Alerts")
-    alert_tab=st.radio("",options=["All","New"],index=0,horizontal=True,label_visibility="collapsed")
-    base_alerts=df[df.get("confidence",0)>=0.7].copy()
-    base_alerts=base_alerts.sort_values("timestamp",ascending=False)
-    if alert_tab=="New":
-        alerts=recent_highconf.sort_values("timestamp",ascending=False)
-    else:
-        alerts=base_alerts.head(50)
-    st.markdown("<div class='table-container scroll-panel'>",unsafe_allow_html=True)
-    if alerts.empty:
-        st.write("No alerts to display.")
-    else:
-        for _,row in alerts.iterrows():
-            ts_diff=now_utc-row["timestamp"]
-            mins_ago=int(ts_diff.total_seconds()//60)
-            ago_txt="Just now" if mins_ago==0 else f"{mins_ago} min ago"
-            conf=row.get("confidence",0)
-            loc=row.get("location","Unknown location")
-            cam=row.get("camera_id","Unknown")
-            st.markdown(
-                f"<div style='padding:0.45rem 0.2rem;border-bottom:1px solid #e5e7eb;'>"
-                f"<div class='alert-title'>{row.get('class','Dog').title()} detected</div>"
-                f"<div class='alert-sub'>{loc}</div>"
-                f"<div class='alert-sub'>{ago_txt} • {conf*100:.0f}% confidence • {cam}</div>"
-                f"</div>",
-                unsafe_allow_html=True)
-    st.markdown("</div>",unsafe_allow_html=True)
+    alert_tab = st.radio(
+        "",
+        options=["All","New"],
+        index=0,
+        horizontal=True,
+        label_visibility="collapsed"
+    )
 
-# 2) ALERT DETAILS (fixed height + scroll + light background)
+    base_alerts = df[df.get("confidence",0) >= 0.7].copy()
+    base_alerts = base_alerts.sort_values("timestamp", ascending=False)
+
+    if alert_tab == "New":
+        alerts = recent_highconf.sort_values("timestamp", ascending=False)
+    else:
+        alerts = base_alerts.head(50)
+
+    if alerts.empty:
+        st.info("No alerts to display.")
+    else:
+        alerts_log = alerts.copy()
+        # choose log-style columns
+        cols_log = [c for c in ["timestamp","camera_id","location","class","confidence"] if c in alerts_log.columns]
+        alerts_log = alerts_log[cols_log]
+        # pretty timestamp
+        alerts_log["timestamp"] = alerts_log["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        alerts_log = alerts_log.reset_index(drop=True)
+        st.dataframe(alerts_log, height=380)
+
+# 2) ALERT DETAILS – one selected alert, shown as mini log + image
 with row2_col2:
     st.markdown("#### Alert Details")
-    alerts_all=base_alerts.head(50)
+
+    alerts_all = base_alerts.head(50)
     if alerts_all.empty:
         st.info("No alerts available.")
     else:
-        st.markdown("<div class='table-container scroll-panel'>",unsafe_allow_html=True)
-        idx_options=alerts_all.index.tolist()
-        selected_idx=st.selectbox(
+        idx_options = alerts_all.index.tolist()
+        selected_idx = st.selectbox(
             "Select alert",
             options=idx_options,
             format_func=lambda i: f"{alerts_all.loc[i,'class'].title()} at {alerts_all.loc[i,'location']} "
                                   f"({alerts_all.loc[i,'timestamp'].strftime('%Y-%m-%d %H:%M')})"
         )
-        sel=alerts_all.loc[selected_idx]
+        sel = alerts_all.loc[selected_idx]
 
-        # inner card just for padding/visual
-        st.markdown("<div class='card'>",unsafe_allow_html=True)
+        # image on top (if available)
         if image_col and isinstance(sel.get(image_col,""),str) and sel.get(image_col,"").strip():
-            st.image(sel[image_col],use_column_width=True)
+            st.image(sel[image_col], use_column_width=True)
         else:
             st.info("No snapshot image available for this alert.")
-        st.markdown("**Detection Information**")
-        st.write("Dogs Detected: 1")
-        st.write("Breed Type: _N/A (not classified in this prototype)_")
-        st.write(f"Confidence: {sel.get('confidence',0)*100:.0f}%")
-        st.write("")
-        st.write(f"**Location:** {sel.get('location','-')}")
-        st.write(f"**Camera ID:** {sel.get('camera_id','-')}")
-        st.write(f"**Detected At:** {sel.get('timestamp').strftime('%Y-%m-%d %H:%M:%S')}")
-        st.markdown("</div>",unsafe_allow_html=True)  # close inner card
-        st.markdown("</div>",unsafe_allow_html=True)  # close table-container scroll-panel
 
-# 3) RECENT ACTIVITY (fixed height + scroll + light background)
+        # details as a 1-row log
+        details_df = pd.DataFrame([{
+            "timestamp": sel["timestamp"],
+            "camera_id": sel.get("camera_id","-"),
+            "location": sel.get("location","-"),
+            "class": sel.get("class","dog"),
+            "confidence": sel.get("confidence",0)
+        }])
+        details_df["timestamp"] = details_df["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        st.dataframe(details_df.reset_index(drop=True), height=180)
+
+# 3) RECENT ACTIVITY – also log style
 with row2_col3:
     st.markdown("#### Recent Activity")
-    recent_activity=df.sort_values("timestamp",ascending=False).head(15)
-    st.markdown("<div class='table-container scroll-panel'>",unsafe_allow_html=True)
-    for _,row in recent_activity.iterrows():
-        ts=row["timestamp"].strftime("%H:%M")
-        loc=row.get("location","Unknown location")
-        cam=row.get("camera_id","Unknown")
-        st.markdown(
-            f"<div style='padding:0.4rem 0.2rem;border-bottom:1px solid #e5e7eb;'>"
-            f"<div class='alert-title'>{row.get('class','Dog').title()} at {loc}</div>"
-            f"<div class='alert-sub'>{ts} • {cam}</div>"
-            f"</div>",
-            unsafe_allow_html=True)
-    st.markdown("</div>",unsafe_allow_html=True)
+    recent_activity = df.sort_values("timestamp", ascending=False).head(30)
+    if recent_activity.empty:
+        st.info("No recent activity.")
+    else:
+        act_df = recent_activity.copy()
+        cols_log = [c for c in ["timestamp","camera_id","location","class","confidence"] if c in act_df.columns]
+        act_df = act_df[cols_log]
+        act_df["timestamp"] = act_df["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
+        st.dataframe(act_df.reset_index(drop=True), height=380)
 
 st.write("")
 
