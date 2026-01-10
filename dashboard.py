@@ -96,11 +96,14 @@ body{background-color:#f7f4ef;}
   padding:0.5rem 0.7rem;
   box-shadow:0 2px 4px rgba(15,23,42,0.04);
 }
+
+/* 🔹 fixed-height scrollable panels for Active Alerts, Alert Details, Recent Activity */
 .scroll-panel{
-  max-height:380px;
+  height:380px;          /* fixed height */
   overflow-y:auto;
   padding-right:0.3rem;
 }
+
 .alert-title{
   font-weight:600;
   font-size:0.9rem;
@@ -211,7 +214,10 @@ with header_left:
     st.markdown("### 🐕 Smart City Stray Dog Control System")
     st.caption("Real-Time AI Detection Monitoring")
 with header_right:
-    st.markdown(f"<div style='text-align:right;'><span class='badge badge-green'>System Active</span><br/><span class='metric-label'>Last update:</span> {now_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}</div>",unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='text-align:right;'><span class='badge badge-green'>System Active</span><br/>"
+        f"<span class='metric-label'>Last update:</span> {now_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+        f"</div>",unsafe_allow_html=True)
 
 st.write("")
 
@@ -241,12 +247,17 @@ with c4:
 
 st.write("")
 
-st.markdown(f"<div class='card' style='border-left:4px solid #f97316;margin-bottom:0.8rem;'><span class='{severity_color}'>{severity_label.upper()}</span><span style='margin-left:0.5rem;'>{severity_desc}</span></div>",unsafe_allow_html=True)
+st.markdown(
+    f"<div class='card' style='border-left:4px solid #f97316;margin-bottom:0.8rem;'>"
+    f"<span class='{severity_color}'>{severity_label.upper()}</span>"
+    f"<span style='margin-left:0.5rem;'>{severity_desc}</span>"
+    f"</div>",unsafe_allow_html=True)
 
 st.write("")
 
 row2_col1,row2_col2,row2_col3=st.columns([2,2,1.7])
 
+# 1) ACTIVE ALERTS (fixed height + scroll + light background)
 with row2_col1:
     st.markdown("#### Active Alerts")
     alert_tab=st.radio("",options=["All","New"],index=0,horizontal=True,label_visibility="collapsed")
@@ -267,18 +278,33 @@ with row2_col1:
             conf=row.get("confidence",0)
             loc=row.get("location","Unknown location")
             cam=row.get("camera_id","Unknown")
-            st.markdown(f"<div style='padding:0.45rem 0.2rem;border-bottom:1px solid #e5e7eb;'><div class='alert-title'>{row.get('class','Dog').title()} detected</div><div class='alert-sub'>{loc}</div><div class='alert-sub'>{ago_txt} • {conf*100:.0f}% confidence • {cam}</div></div>",unsafe_allow_html=True)
+            st.markdown(
+                f"<div style='padding:0.45rem 0.2rem;border-bottom:1px solid #e5e7eb;'>"
+                f"<div class='alert-title'>{row.get('class','Dog').title()} detected</div>"
+                f"<div class='alert-sub'>{loc}</div>"
+                f"<div class='alert-sub'>{ago_txt} • {conf*100:.0f}% confidence • {cam}</div>"
+                f"</div>",
+                unsafe_allow_html=True)
     st.markdown("</div>",unsafe_allow_html=True)
 
+# 2) ALERT DETAILS (fixed height + scroll + light background)
 with row2_col2:
     st.markdown("#### Alert Details")
     alerts_all=base_alerts.head(50)
     if alerts_all.empty:
         st.info("No alerts available.")
     else:
+        st.markdown("<div class='table-container scroll-panel'>",unsafe_allow_html=True)
         idx_options=alerts_all.index.tolist()
-        selected_idx=st.selectbox("Select alert",options=idx_options,format_func=lambda i:f"{alerts_all.loc[i,'class'].title()} at {alerts_all.loc[i,'location']} ({alerts_all.loc[i,'timestamp'].strftime('%Y-%m-%d %H:%M')})")
+        selected_idx=st.selectbox(
+            "Select alert",
+            options=idx_options,
+            format_func=lambda i: f"{alerts_all.loc[i,'class'].title()} at {alerts_all.loc[i,'location']} "
+                                  f"({alerts_all.loc[i,'timestamp'].strftime('%Y-%m-%d %H:%M')})"
+        )
         sel=alerts_all.loc[selected_idx]
+
+        # inner card just for padding/visual
         st.markdown("<div class='card'>",unsafe_allow_html=True)
         if image_col and isinstance(sel.get(image_col,""),str) and sel.get(image_col,"").strip():
             st.image(sel[image_col],use_column_width=True)
@@ -292,8 +318,10 @@ with row2_col2:
         st.write(f"**Location:** {sel.get('location','-')}")
         st.write(f"**Camera ID:** {sel.get('camera_id','-')}")
         st.write(f"**Detected At:** {sel.get('timestamp').strftime('%Y-%m-%d %H:%M:%S')}")
-        st.markdown("</div>",unsafe_allow_html=True)
+        st.markdown("</div>",unsafe_allow_html=True)  # close inner card
+        st.markdown("</div>",unsafe_allow_html=True)  # close table-container scroll-panel
 
+# 3) RECENT ACTIVITY (fixed height + scroll + light background)
 with row2_col3:
     st.markdown("#### Recent Activity")
     recent_activity=df.sort_values("timestamp",ascending=False).head(15)
@@ -302,7 +330,12 @@ with row2_col3:
         ts=row["timestamp"].strftime("%H:%M")
         loc=row.get("location","Unknown location")
         cam=row.get("camera_id","Unknown")
-        st.markdown(f"<div style='padding:0.4rem 0.2rem;border-bottom:1px solid #e5e7eb;'><div class='alert-title'>{row.get('class','Dog').title()} at {loc}</div><div class='alert-sub'>{ts} • {cam}</div></div>",unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='padding:0.4rem 0.2rem;border-bottom:1px solid #e5e7eb;'>"
+            f"<div class='alert-title'>{row.get('class','Dog').title()} at {loc}</div>"
+            f"<div class='alert-sub'>{ts} • {cam}</div>"
+            f"</div>",
+            unsafe_allow_html=True)
     st.markdown("</div>",unsafe_allow_html=True)
 
 st.write("")
@@ -346,4 +379,6 @@ with row3_col2:
 st.write("")
 st.markdown("#### Recent Detection Events")
 cols=[c for c in ["timestamp","camera_id","location","class","confidence"] if c in df.columns]
-st.dataframe(df.sort_values("timestamp",ascending=False)[cols].head(50).reset_index(drop=True))
+st.dataframe(
+    df.sort_values("timestamp",ascending=False)[cols].head(50).reset_index(drop=True)
+)
