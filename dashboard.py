@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
+from streamlit_autorefresh import st_autorefresh
 
 SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_MS=3000
@@ -59,7 +60,7 @@ body{background-color:#f7f4ef;}
 </style>
 """,unsafe_allow_html=True)
 
-st.autorefresh(interval=REFRESH_MS,key="data_refresh")
+count = st_autorefresh(interval=REFRESH_MS, key="data_refresh")
 
 def generate_dummy_data(n=200):
     now=datetime.utcnow()
