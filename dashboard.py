@@ -25,19 +25,67 @@ body{background-color:#f7f4ef;}
   padding-top:1.5rem;
   padding-bottom:1.5rem;
 }
-.card{
-  padding:0.9rem 1.1rem;
+
+/* Generic soft white panel (for the three boxes) */
+.panel-box{
   border-radius:1rem;
   background:#ffffff;
   border:1px solid #e5e7eb;
-  box-shadow:0 2px 4px rgba(15,23,42,0.04);
+  padding:0.75rem 0.9rem;
+  box-shadow:0 1px 3px rgba(15,23,42,0.06);
+  height:430px;              /* 🔹 same height for all three */
+  display:flex;
+  flex-direction:column;
 }
+.panel-title{
+  font-weight:600;
+  font-size:0.95rem;
+  margin-bottom:0.35rem;
+}
+
+/* scroll area inside the panel */
+.scroll-panel{
+  flex:1;
+  overflow-y:auto;
+  padding-right:0.3rem;
+  margin-top:0.4rem;
+}
+
+/* Alert item styling (each row in the log) */
+.alert-item{
+  border-radius:0.7rem;
+  border:1px solid #e5e7eb;
+  background:#f9fafb;
+  padding:0.5rem 0.6rem;
+  margin-bottom:0.4rem;
+}
+.alert-item-title{
+  font-weight:600;
+  font-size:0.9rem;
+}
+.alert-item-sub{
+  font-size:0.8rem;
+  color:#6b7280;
+}
+
+/* badges, KPI styles etc – keep these from your previous CSS */
+.badge{
+  display:inline-block;
+  padding:0.15rem 0.6rem;
+  border-radius:999px;
+  font-size:0.7rem;
+  font-weight:600;
+}
+.badge-green{background:#dcfce7;color:#166534;}
+.badge-yellow{background:#fef9c3;color:#854d0e;}
+.badge-red{background:#fee2e2;color:#b91c1c;}
+
 .kpi-card{
   padding:0.9rem 1.1rem;
   border-radius:1rem;
   background:#ffffff;
   border:1px solid #e5e7eb;
-  box-shadow:0 2px 4px rgba(15,23,42,0.04);
+  box-shadow:0 1px 3px rgba(15,23,42,0.06);
 }
 .kpi-top-row{
   display:flex;
@@ -75,54 +123,12 @@ body{background-color:#f7f4ef;}
   font-size:0.85rem;
   color:#6b7280;
 }
-.badge{
-  display:inline-block;
-  padding:0.15rem 0.6rem;
-  border-radius:999px;
-  font-size:0.7rem;
-  font-weight:600;
-}
-.badge-green{background:#dcfce7;color:#166534;}
-.badge-yellow{background:#fef9c3;color:#854d0e;}
-.badge-red{background:#fee2e2;color:#b91c1c;}
 .metric-label{
   font-size:0.8rem;
   color:#6b7280;
 }
-.table-container{
-  border-radius:1rem;
-  background:#ffffff;
-  border:1px solid #e5e7eb;
-  padding:0.5rem 0.7rem;
-  box-shadow:0 2px 4px rgba(15,23,42,0.04);
-}
-
-/* 🔹 fixed-height scrollable panels for Active Alerts, Alert Details, Recent Activity */
-.scroll-panel{
-  height:380px;          /* fixed height */
-  overflow-y:auto;
-  padding-right:0.3rem;
-}
-
-.alert-title{
-  font-weight:600;
-  font-size:0.9rem;
-}
-.alert-sub{
-  font-size:0.8rem;
-  color:#6b7280;
-}
-.alert-pill{
-  display:inline-block;
-  padding:0.1rem 0.5rem;
-  border-radius:999px;
-  font-size:0.7rem;
-  font-weight:600;
-  background:#fef9c3;
-  color:#854d0e;
-}
 </style>
-""",unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 def generate_dummy_data(n=200):
     now=datetime.utcnow()
@@ -255,13 +261,17 @@ st.markdown(
 
 st.write("")
 
-row2_col1,row2_col2,row2_col3=st.columns([2,2,1.7])
+row2_col1, row2_col2, row2_col3 = st.columns([2,2,1.7])
 
-# 1) ACTIVE ALERTS – log style like Recent Detection Events
+# 🔹 ACTIVE ALERTS – light panel + scroll log
 with row2_col1:
-    st.markdown("#### Active Alerts")
+    st.markdown("""
+    <div class="panel-box">
+      <div class="panel-title">Active Alerts</div>
+    """, unsafe_allow_html=True)
+
     alert_tab = st.radio(
-        "",
+        "Filter alerts",
         options=["All","New"],
         index=0,
         horizontal=True,
@@ -276,64 +286,95 @@ with row2_col1:
     else:
         alerts = base_alerts.head(50)
 
+    st.markdown('<div class="scroll-panel">', unsafe_allow_html=True)
     if alerts.empty:
-        st.info("No alerts to display.")
+        st.write("No alerts to display.")
     else:
-        alerts_log = alerts.copy()
-        # choose log-style columns
-        cols_log = [c for c in ["timestamp","camera_id","location","class","confidence"] if c in alerts_log.columns]
-        alerts_log = alerts_log[cols_log]
-        # pretty timestamp
-        alerts_log["timestamp"] = alerts_log["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        alerts_log = alerts_log.reset_index(drop=True)
-        st.dataframe(alerts_log, height=380)
+        for _, row in alerts.iterrows():
+            ts_diff = now_utc - row["timestamp"]
+            mins_ago = int(ts_diff.total_seconds() // 60)
+            ago_txt = "Just now" if mins_ago == 0 else f"{mins_ago} min ago"
+            conf = row.get("confidence",0)
+            loc = row.get("location","Unknown location")
+            cam = row.get("camera_id","Unknown")
+            cls = row.get("class","Dog").title()
 
-# 2) ALERT DETAILS – one selected alert, shown as mini log + image
+            st.markdown(
+                f"<div class='alert-item'>"
+                f"<div class='alert-item-title'>{cls} detected</div>"
+                f"<div class='alert-item-sub'>{loc}</div>"
+                f"<div class='alert-item-sub'>{ago_txt} • {conf*100:.0f}% confidence • {cam}</div>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+    st.markdown("</div></div>", unsafe_allow_html=True)  # close scroll-panel + panel-box
+
+# 🔹 ALERT DETAILS – light panel, same height
 with row2_col2:
-    st.markdown("#### Alert Details")
+    st.markdown("""
+    <div class="panel-box">
+      <div class="panel-title">Alert Details</div>
+    """, unsafe_allow_html=True)
 
     alerts_all = base_alerts.head(50)
     if alerts_all.empty:
         st.info("No alerts available.")
+        st.markdown("</div>", unsafe_allow_html=True)
     else:
         idx_options = alerts_all.index.tolist()
         selected_idx = st.selectbox(
             "Select alert",
             options=idx_options,
-            format_func=lambda i: f"{alerts_all.loc[i,'class'].title()} at {alerts_all.loc[i,'location']} "
-                                  f"({alerts_all.loc[i,'timestamp'].strftime('%Y-%m-%d %H:%M')})"
+            format_func=lambda i:
+                f"{alerts_all.loc[i,'class'].title()} at {alerts_all.loc[i,'location']} "
+                f"({alerts_all.loc[i,'timestamp'].strftime('%Y-%m-%d %H:%M')})"
         )
+
         sel = alerts_all.loc[selected_idx]
 
-        # image on top (if available)
+        # Optional snapshot
         if image_col and isinstance(sel.get(image_col,""),str) and sel.get(image_col,"").strip():
             st.image(sel[image_col], use_column_width=True)
         else:
             st.info("No snapshot image available for this alert.")
 
-        # details as a 1-row log
-        details_df = pd.DataFrame([{
-            "timestamp": sel["timestamp"],
-            "camera_id": sel.get("camera_id","-"),
-            "location": sel.get("location","-"),
-            "class": sel.get("class","dog"),
-            "confidence": sel.get("confidence",0)
-        }])
-        details_df["timestamp"] = details_df["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        st.dataframe(details_df.reset_index(drop=True), height=180)
+        st.markdown('<div class="scroll-panel">', unsafe_allow_html=True)
+        st.markdown("**Detection Information**")
+        st.write(f"Class: {sel.get('class','dog').title()}")
+        st.write(f"Confidence: {sel.get('confidence',0)*100:.0f}%")
+        st.write("")
+        st.write(f"**Location:** {sel.get('location','-')}")
+        st.write(f"**Camera ID:** {sel.get('camera_id','-')}")
+        st.write(f"**Detected At:** {sel.get('timestamp').strftime('%Y-%m-%d %H:%M:%S')}")
+        st.markdown("</div></div>", unsafe_allow_html=True)
 
-# 3) RECENT ACTIVITY – also log style
+# 🔹 RECENT ACTIVITY – light panel + scroll log
 with row2_col3:
-    st.markdown("#### Recent Activity")
-    recent_activity = df.sort_values("timestamp", ascending=False).head(30)
+    st.markdown("""
+    <div class="panel-box">
+      <div class="panel-title">Recent Activity</div>
+    """, unsafe_allow_html=True)
+
+    recent_activity = df.sort_values("timestamp", ascending=False).head(25)
+
+    st.markdown('<div class="scroll-panel">', unsafe_allow_html=True)
     if recent_activity.empty:
-        st.info("No recent activity.")
+        st.write("No recent activity.")
     else:
-        act_df = recent_activity.copy()
-        cols_log = [c for c in ["timestamp","camera_id","location","class","confidence"] if c in act_df.columns]
-        act_df = act_df[cols_log]
-        act_df["timestamp"] = act_df["timestamp"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        st.dataframe(act_df.reset_index(drop=True), height=380)
+        for _, row in recent_activity.iterrows():
+            ts = row["timestamp"].strftime("%H:%M")
+            loc = row.get("location","Unknown location")
+            cam = row.get("camera_id","Unknown")
+            cls = row.get("class","Dog").title()
+
+            st.markdown(
+                f"<div class='alert-item'>"
+                f"<div class='alert-item-title'>{cls} at {loc}</div>"
+                f"<div class='alert-item-sub'>{ts} • {cam}</div>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+    st.markdown("</div></div>", unsafe_allow_html=True)
 
 st.write("")
 
