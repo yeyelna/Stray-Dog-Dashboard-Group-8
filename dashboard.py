@@ -18,7 +18,8 @@ DEFAULT_WINDOW = "24 Hours"
 # =========================
 # THEME / CSS (LIGHT MODE)
 # =========================
-st.markdown("""<style>
+st.markdown(
+    """<style>
 html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
 .stApp{background:#f7f4ef;}
 .block-container{padding-top:1.0rem;padding-bottom:1.0rem;max-width:1400px;background:transparent;}
@@ -51,6 +52,7 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .camBody{padding:12px 14px;background:#fffefc;}
 .camLoc{font-weight:900;color:#0F172A;}
 .camSub{color:#64748B;font-weight:800;font-size:13px;}
+
 /* Light buttons */
 .stButton>button{
   background:#fffefc !important;
@@ -59,9 +61,12 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
   border-radius:12px !important;
   padding:10px 12px !important;
   font-weight:900 !important;
+  width:100% !important;
 }
 .stButton>button:hover{background:#FFFDFA !important;border-color:#D5DCE6 !important;}
-</style>""", unsafe_allow_html=True)
+</style>""",
+    unsafe_allow_html=True,
+)
 
 # =========================
 # HELPERS
@@ -85,6 +90,7 @@ def parse_ts(x):
             continue
     return pd.NaT
 
+
 def time_ago(dt):
     if pd.isna(dt):
         return "—"
@@ -102,29 +108,45 @@ def time_ago(dt):
     days = hrs // 24
     return f"{days}d ago"
 
+
 def pill(text, kind):
     cls = "pillGray"
-    if kind == "green": cls = "pillGreen"
-    if kind == "yellow": cls = "pillYellow"
-    if kind == "blue": cls = "pillBlue"
-    if kind == "red": cls = "pillRed"
-    if kind == "orange": cls = "pillOrange"
+    if kind == "green":
+        cls = "pillGreen"
+    if kind == "yellow":
+        cls = "pillYellow"
+    if kind == "blue":
+        cls = "pillBlue"
+    if kind == "red":
+        cls = "pillRed"
+    if kind == "orange":
+        cls = "pillOrange"
     return f'<span class="pill {cls}">{text}</span>'
+
 
 def sev_pill(sev):
     s = str(sev).upper()
-    if s == "CRITICAL": return pill("CRITICAL", "red")
-    if s == "HIGH": return pill("HIGH", "orange")
-    if s == "MEDIUM": return pill("MEDIUM", "yellow")
-    if s == "LOW": return pill("LOW", "blue")
+    if s == "CRITICAL":
+        return pill("CRITICAL", "red")
+    if s == "HIGH":
+        return pill("HIGH", "orange")
+    if s == "MEDIUM":
+        return pill("MEDIUM", "yellow")
+    if s == "LOW":
+        return pill("LOW", "blue")
     return pill(s, "gray")
+
 
 def status_pill(sts):
     s = str(sts).upper()
-    if s == "NEW": return pill("NEW", "red")
-    if s == "ACKNOWLEDGED": return pill("ACKNOWLEDGED", "yellow")
-    if s == "DISPATCHED": return pill("DISPATCHED", "blue")
+    if s == "NEW":
+        return pill("NEW", "red")
+    if s == "ACKNOWLEDGED":
+        return pill("ACKNOWLEDGED", "yellow")
+    if s == "DISPATCHED":
+        return pill("DISPATCHED", "blue")
     return pill(s, "gray")
+
 
 def conf_text(v):
     try:
@@ -136,11 +158,12 @@ def conf_text(v):
     except Exception:
         return "—"
 
+
 def segmented(label, options, default):
-    # Compatibility helper (in case segmented_control isn't available)
     if hasattr(st, "segmented_control"):
         return st.segmented_control(label, options=options, default=default, label_visibility="collapsed")
     return st.radio(label, options, horizontal=True, label_visibility="collapsed")
+
 
 # =========================
 # DATA
@@ -152,238 +175,60 @@ def load_data():
     except Exception:
         df = pd.DataFrame()
 
+    # fallback demo if sheet not accessible / wrong cols
     if df.empty or "timestamp" not in df.columns:
         now = datetime.now(TZ).replace(second=0, microsecond=0)
         demo = []
-        locs = ["Residential Area 3","West End Avenue","Shopping District","Central Park, Zone A3","Market Street, Intersection 5B","Riverside Drive, Block 12","School District 4, Gate C","Industrial Area, Sector 7"]
-        breeds = ["Small breed","Mixed","Large breed","Pack detected","Medium breed"]
-        sevs = ["LOW","MEDIUM","HIGH","CRITICAL"]
-        stats = ["NEW","ACKNOWLEDGED","DISPATCHED"]
-        cams = ["CAM-015","CAM-026","CAM-075","CAM-016","CAM-012","CAM-023","CAM-047","CAM-089","CAM-105","CAM-132"]
+        locs = [
+            "Residential Area 3",
+            "West End Avenue",
+            "Shopping District",
+            "Central Park, Zone A3",
+            "Market Street, Intersection 5B",
+            "Riverside Drive, Block 12",
+            "School District 4, Gate C",
+            "Industrial Area, Sector 7",
+        ]
+        breeds = ["Small breed", "Mixed", "Large breed", "Pack detected", "Medium breed"]
+        sevs = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+        stats = ["NEW", "ACKNOWLEDGED", "DISPATCHED"]
+        cams = ["CAM-015", "CAM-026", "CAM-075", "CAM-016", "CAM-012", "CAM-023", "CAM-047", "CAM-089", "CAM-105", "CAM-132"]
         for i in range(60):
-            dt = now - timedelta(minutes=i*2)
-            demo.append({
-                "timestamp": dt.isoformat(),
-                "detection_id": f"DET-{str(i+1).zfill(3)}",
-                "location": np.random.choice(locs),
-                "camera_id": np.random.choice(cams),
-                "dogs": int(np.random.choice([1,1,1,2,3])),
-                "breed": np.random.choice(breeds),
-                "confidence": int(np.random.randint(78,97)),
-                "severity": np.random.choice(sevs, p=[0.35,0.25,0.30,0.10]),
-                "status": np.random.choice(stats, p=[0.55,0.30,0.15]),
-                "camera_state": "ONLINE",
-                "recording": np.random.choice(["REC",""], p=[0.6,0.4])
-            })
+            dt = now - timedelta(minutes=i * 2)
+            demo.append(
+                {
+                    "timestamp": dt.isoformat(),
+                    "detection_id": f"DET-{str(i+1).zfill(3)}",
+                    "location": np.random.choice(locs),
+                    "camera_id": np.random.choice(cams),
+                    "dogs": int(np.random.choice([1, 1, 1, 2, 3])),
+                    "breed": np.random.choice(breeds),
+                    "confidence": int(np.random.randint(78, 97)),
+                    "severity": np.random.choice(sevs, p=[0.35, 0.25, 0.30, 0.10]),
+                    "status": np.random.choice(stats, p=[0.55, 0.30, 0.15]),
+                    "camera_state": "ONLINE",
+                    "recording": np.random.choice(["REC", ""], p=[0.6, 0.4]),
+                }
+            )
         df = pd.DataFrame(demo)
 
+    # normalize / validate
     df["timestamp"] = df["timestamp"].apply(parse_ts)
     df = df.dropna(subset=["timestamp"]).sort_values("timestamp", ascending=False)
 
-    if "detection_id" not in df.columns: df["detection_id"] = [f"DET-{str(i+1).zfill(3)}" for i in range(len(df))]
-    if "camera_id" not in df.columns: df["camera_id"] = "CAM-000"
-    if "location" not in df.columns: df["location"] = "Unknown"
-    if "dogs" not in df.columns: df["dogs"] = 1
-    if "breed" not in df.columns: df["breed"] = "Unknown"
-    if "confidence" not in df.columns: df["confidence"] = 90
-    if "severity" not in df.columns: df["severity"] = "LOW"
-    if "status" not in df.columns: df["status"] = "NEW"
-    if "camera_state" not in df.columns: df["camera_state"] = "ONLINE"
-    if "recording" not in df.columns: df["recording"] = ""
-    return df
-
-df = load_data()
-top = df.head(2000).copy()
-
-if "selected_alert" not in st.session_state:
-    st.session_state["selected_alert"] = None
-if "window" not in st.session_state:
-    st.session_state["window"] = DEFAULT_WINDOW
-
-# =========================
-# HEADER
-# =========================
-st.markdown(f"""<div class="card" style="padding:18px 18px 14px 18px;">
-<div style="display:flex;justify-content:space-between;align-items:center;gap:16px;">
-<div style="display:flex;align-items:center;gap:14px;">
-<div style="width:44px;height:44px;border-radius:14px;background:#1D4ED8;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;">⚠️</div>
-<div>
-<div style="font-size:22px;font-weight:900;color:#0F172A;">Smart City Stray Dog Control System</div>
-<div class="subtle">Real-Time AI Detection Monitoring</div>
-</div>
-</div>
-<div style="display:flex;gap:10px;align-items:center;">
-{pill("System Active","green")}
-{pill(f"{(top['status'].astype(str).str.upper()=='NEW').sum()} New Alerts","yellow")}
-</div>
-</div>
-</div>""", unsafe_allow_html=True)
-
-# =========================
-# KPI ROW
-# =========================
-window_for_kpi = st.session_state.get("window", DEFAULT_WINDOW)
-hours_kpi = 24 if window_for_kpi == "24 Hours" else 24 * 7
-cut_kpi = datetime.now(TZ) - timedelta(hours=hours_kpi)
-dfw = top[top["timestamp"] >= cut_kpi].copy()
-
-new_alerts = int((dfw["status"].astype(str).str.upper() == "NEW").sum())
-total_dogs = int(dfw["dogs"].fillna(0).astype(int).sum())
-high_pri = int((dfw["severity"].astype(str).str.upper().isin(["HIGH","CRITICAL"]) & (dfw["status"].astype(str).str.upper() != "DISPATCHED")).sum())
-
-def kpi_card(title, value, trend, trend_dir, icon):
-    tcls = "trendUp" if trend_dir == "up" else "trendDown"
-    return f"""<div class="card"><div class="kpiWrap">
-<div class="kpiLeft">
-<div style="width:42px;height:42px;border-radius:14px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-weight:900;">{icon}</div>
-<div class="kpiValue">{value}</div>
-<div class="kpiLabel">{title}</div>
-</div>
-<div class="kpiTrend {tcls}">{trend}</div>
-</div></div>"""
-
-a, b, c = st.columns(3)
-with a: st.markdown(kpi_card("New Alerts", new_alerts, "+12%", "up", "🚨"), unsafe_allow_html=True)
-with b: st.markdown(kpi_card("Total Dogs Detected", total_dogs, "+8%", "up", "📈"), unsafe_allow_html=True)
-with c: st.markdown(kpi_card("High Priority", high_pri, "-5%", "down", "⚠️"), unsafe_allow_html=True)
-
-st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
-
-# =========================
-# 3-COLUMN MAIN AREA
-# =========================
-colL, colM, colR = st.columns([1.05, 1.45, 1.05])
-
-# ---------- LEFT: ACTIVE ALERTS (MATCH IDEAL) ----------
-with colL:
-    st.markdown("<div class='card'><div class='cardTitle'>⛔ Active Alerts</div></div>", unsafe_allow_html=True)
-    tab = segmented("alert_tab", ["All","New","Acknowledged","Dispatched"], "All")
-
-    filt = top.copy()
-    if tab != "All":
-        filt = filt[filt["status"].astype(str).str.upper() == tab.upper()]
-    filt = filt.sort_values("timestamp", ascending=False).head(60)
-
-    st.markdown("<div class='card' style='margin-top:10px; padding:0;'>", unsafe_allow_html=True)
-
-    # Scroll list that works with Streamlit widgets
-    with st.container(height=520):
-        if len(filt) == 0:
-            st.markdown("<div class='subtle' style='padding:14px;'>No alerts.</div>", unsafe_allow_html=True)
-        else:
-            for _, r in filt.iterrows():
-                did = str(r["detection_id"])
-                dogs = int(r["dogs"]) if pd.notna(r["dogs"]) else 0
-                ago = time_ago(r["timestamp"])
-                sev_html = sev_pill(r["severity"])
-                conf_txt = conf_text(r["confidence"])
-                selected = (st.session_state.get("selected_alert") == did)
-                bg = "#F8FAFF" if selected else "#fffefc"
-
-                st.markdown(f"<div style='background:{bg};padding:14px;border-bottom:1px solid #EEF2F6;'>", unsafe_allow_html=True)
-
-                left, right = st.columns([0.76, 0.24], vertical_alignment="top")
-                with left:
-                    st.markdown(f"""
-<div style="display:flex;align-items:center;gap:10px;">
-  <span style="width:10px;height:10px;border-radius:50%;background:#FB7185;display:inline-block;"></span>
-  <span style="font-weight:900;color:#0F172A;">{did}</span>
-</div>
-<div style="margin-top:6px;font-size:18px;font-weight:900;color:#0F172A;">{dogs} Dog{'s' if dogs!=1 else ''} Detected</div>
-<div class="subtle" style="margin-top:2px;font-weight:800;">{r['breed']}</div>
-<div style="margin-top:10px;color:#475569;font-weight:800;font-size:13px;">📍 {r['location']}</div>
-<div style="margin-top:6px;color:#475569;font-weight:800;font-size:13px;">🕒 {ago}</div>
-""", unsafe_allow_html=True)
-
-                with right:
-                    st.markdown(f"<div style='display:flex;justify-content:flex-end;'>{sev_html}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div style='margin-top:70px;text-align:right;color:#64748B;font-weight:900;font-size:13px;'>{conf_txt}</div>", unsafe_allow_html=True)
-                    if st.button("Select", key=f"sel_{did}"):
-                        st.session_state["selected_alert"] = did
-
-                st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ---------- MIDDLE: CAMERA FEEDS ----------
-with colM:
-    st.markdown("<div class='card'>"
-                "<div style='display:flex;justify-content:space-between;align-items:center;gap:10px;'>"
-                "<div class='cardTitle'>📷 Camera Feeds & Snapshots</div>", unsafe_allow_html=True)
-    view = segmented("cam_view", ["Gallery","Single"], "Gallery")
-    st.markdown("</div></div>", unsafe_allow_html=True)
-
-    cams = top.sort_values("timestamp", ascending=False).groupby("camera_id", as_index=False).first().head(4)
-
-    st.markdown("<div class='card' style='margin-top:10px;'>", unsafe_allow_html=True)
-    if view == "Gallery":
-        st.markdown("<div class='camGrid'>", unsafe_allow_html=True)
-        for _, r in cams.iterrows():
-            cam = str(r["camera_id"])
-            online = str(r["camera_state"]).upper() == "ONLINE"
-            rec = str(r["recording"]).upper() == "REC"
-            ago = time_ago(r["timestamp"])
-            loc1 = str(r["location"]).split(",")[0]
-            st.markdown(f"""<div class="camCard">
-<div class="camImg">
-<div class="camBadges">
-<div class="camBadge camOnline">{'● ONLINE' if online else '● OFFLINE'}</div>
-<div class="camBadge camRec">{'● REC' if rec else ''}</div>
-</div>
-<div class="camId">{cam}</div>
-<div class="camAgo">📸 Detection {ago}</div>
-</div>
-<div class="camBody">
-<div class="camLoc">{loc1}</div>
-<div class="camSub">{str(r['location'])[0:48]}</div>
-</div>
-</div>""", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    else:
-        r = cams.iloc[0] if len(cams) > 0 else None
-        if r is None:
-            st.markdown("<div class='subtle'>No camera data.</div>", unsafe_allow_html=True)
-        else:
-            cam = str(r["camera_id"])
-            online = str(r["camera_state"]).upper() == "ONLINE"
-            rec = str(r["recording"]).upper() == "REC"
-            ago = time_ago(r["timestamp"])
-            loc1 = str(r["location"]).split(",")[0]
-            st.markdown(f"""<div class="camCard">
-<div class="camImg" style="height:260px;">
-<div class="camBadges">
-<div class="camBadge camOnline">{'● ONLINE' if online else '● OFFLINE'}</div>
-<div class="camBadge camRec">{'● REC' if rec else ''}</div>
-</div>
-<div class="camId">{cam}</div>
-<div class="camAgo">📸 Detection {ago}</div>
-</div>
-<div class="camBody">
-<div class="camLoc">{loc1}</div>
-<div class="camSub">{str(r['location'])[0:60]}</div>
-</div>
-</div>""", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ---------- RIGHT: ALERT DETAILS ----------
-with colR:
-    sel = st.session_state.get("selected_alert", None)
-    if not sel:
-        st.markdown("<div class='card' style='height:100%;min-height:420px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;'>"
-                    "<div style='font-size:46px;'>🖼️</div>"
-                    "<div style='font-weight:900;color:#64748B;'>Please choose any active alerts</div>"
-                    "</div>", unsafe_allow_html=True)
-    else:
-        pick = top[top["detection_id"].astype(str) == str(sel)].head(1)
-        if len(pick) == 0:
-            st.markdown("<div class='card'>No details found.</div>", unsafe_allow_html=True)
-        else:
-            r = pick.iloc[0]
-            conf_html = pill(conf_text(r["confidence"]), "gray")
-            sev_html = sev_pill(r["severity"])
-            sts_html = status_pill(r["status"])
-            st.markdown("<div class='card' style='min-height:420px;'>", unsafe_allow_html=True)
-            st.markdown(f"<div class='cardTitle'>📌 Alert Details</div><div class='subtle'>Selected: <b>{sel}</b></div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='margin-top:10px;font-weight:900;font-size:20px;color:#0F172A;'>{int(r['dogs'])} Dog(s) Detected</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='subtle' style='margin-top:2px;font-weight:800;'>{r['breed']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;'>{sev_html}{sts_html}{conf_html}</div>", un_
+    if "detection_id" not in df.columns:
+        df["detection_id"] = [f"DET-{str(i+1).zfill(3)}" for i in range(len(df))]
+    if "camera_id" not in df.columns:
+        df["camera_id"] = "CAM-000"
+    if "location" not in df.columns:
+        df["location"] = "Unknown"
+    if "dogs" not in df.columns:
+        df["dogs"] = 1
+    if "breed" not in df.columns:
+        df["breed"] = "Unknown"
+    if "confidence" not in df.columns:
+        df["confidence"] = 90
+    if "severity" not in df.columns:
+        df["severity"] = "LOW"
+    if "status" not in df.columns:
+        df["stat]()
