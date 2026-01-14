@@ -7,7 +7,8 @@ from dateutil import parser
 import plotly.graph_objects as go
 st.set_page_config(page_title="Smart City Stray Dog Control System", layout="wide")
 TZ=ZoneInfo("Asia/Kuala_Lumpur")
-SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pubhtml?gid=0&single=true"
+SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
+"
 REFRESH_SEC=8
 DEFAULT_WINDOW="24 Hours"
 st.markdown("""<style>
@@ -280,7 +281,10 @@ if sel:
             st.markdown(f"<div class='cardTitle'>📌 Alert Details</div><div class='subtle'>Selected: <b>{sel}</b></div>", unsafe_allow_html=True)
             st.markdown(f"<div style='margin-top:10px;font-weight:900;font-size:20px;color:#0F172A;'>{int(r['dogs'])} Dog(s) Detected</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='subtle' style='margin-top:2px;font-weight:700;'>{r['breed']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;'>{sev_pill(r['severity'])}{status_pill(r['status'])}{pill(f\"{r['confidence']}% confidence\",\"gray\")}</div>", unsafe_allow_html=True)
+conf_html=pill(f"{r['confidence']}% confidence","gray")
+sev_html=sev_pill(r["severity"])
+sts_html=status_pill(r["status"])
+st.markdown(f"<div style='margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;'>{sev_html}{sts_html}{conf_html}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='margin-top:12px;color:#334155;font-weight:700;'>📍 {r['location']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='margin-top:6px;color:#334155;font-weight:700;'>📷 {r['camera_id']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='margin-top:6px;color:#334155;font-weight:700;'>🕒 {r['timestamp'].strftime('%b %d, %I:%M %p')}</div>", unsafe_allow_html=True)
