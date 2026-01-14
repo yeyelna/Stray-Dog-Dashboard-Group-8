@@ -141,11 +141,18 @@ except Exception as e:
 
 df = df.dropna(subset=["timestamp"]).sort_values("timestamp").reset_index(drop=True)
 
+# =========================
+# TIME WINDOWS (FIXED)
+# =========================
 now = datetime.now(TZ)
-live_start = pd.Timestamp(now - timedelta(minutes=NEW_ALERTS_LIVE_MIN), tz=TZ)
-today_start = pd.Timestamp(datetime.combine(now.date(), time(0, 0)), tz=TZ)
+
+# FIX: don't pass tz=ZoneInfo into pd.Timestamp here
+live_start = pd.Timestamp(now - timedelta(minutes=NEW_ALERTS_LIVE_MIN))
+
+# keep these timezone-safe (use tz string, not ZoneInfo)
+today_start = pd.Timestamp(datetime.combine(now.date(), time(0, 0)), tz="Asia/Kuala_Lumpur")
 yday_date = (now - timedelta(days=1)).date()
-yday_start = pd.Timestamp(datetime.combine(yday_date, time(0, 0)), tz=TZ)
+yday_start = pd.Timestamp(datetime.combine(yday_date, time(0, 0)), tz="Asia/Kuala_Lumpur")
 yday_end = today_start
 
 last_seen = df["timestamp"].max() if len(df) else pd.NaT
