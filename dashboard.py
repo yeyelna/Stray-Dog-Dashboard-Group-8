@@ -20,7 +20,7 @@ HIGH_PRIORITY_CONF_TH = 0.90   # "High Priority" threshold
 # Prefer Streamlit secrets on Cloud:
 # - Streamlit Cloud -> App settings -> Secrets:
 #   SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/.../pub?gid=0&single=true&output=csv"
-DEFAULT_SHEET_CSV_URL = "PASTE_YOUR_PUBLISHED_CSV_URL_HERE"
+DEFAULT_SHEET_CSV_URL = "2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo"
 
 st.set_page_config(page_title="Stray Dog Detection Dashboard", page_icon="🐶", layout="wide")
 
