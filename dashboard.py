@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Smart City Stray Dog Control System", layout="wide")
 TZ=ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
-"
 REFRESH_SEC=8
 DEFAULT_WINDOW="24 Hours"
 st.markdown("""<style>
