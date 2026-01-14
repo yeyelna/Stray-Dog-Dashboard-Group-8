@@ -27,34 +27,47 @@ st.set_page_config(page_title="Stray Dog Detection Dashboard", page_icon="🐶",
 # =========================
 # STYLES
 # =========================
+st.markdown('<div class="page-wrap">', unsafe_allow_html=True)
+
+status_pill = "pill-ok" if system_active else "pill-bad"
+status_text = "SYSTEM ACTIVE" if system_active else "SYSTEM INACTIVE"
+
 st.markdown(
-    """
-    <style>
-    .page-wrap{max-width:1200px;margin:0 auto;}
-    .header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:6px;margin-bottom:8px;}
-    .title-wrap h1{margin:0;font-size:34px;line-height:1.15;}
-    .title-wrap p{margin:6px 0 0 0;color:#6b7280;font-size:14px;}
-    .status-wrap{display:flex;gap:10px;align-items:stretch;justify-content:flex-end;flex-wrap:wrap;}
-    .mini-box{border:1px solid #e5e7eb;border-radius:14px;background:#ffffff;padding:10px 12px;min-width:160px;box-shadow:0 1px 0 rgba(0,0,0,0.03);}
-    .mini-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
-    .pill{font-size:12px;font-weight:600;border-radius:999px;padding:4px 10px;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;white-space:nowrap;}
-    .pill-ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
-    .pill-bad{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
-    .mini-label{font-size:12px;color:#6b7280;margin:0;}
-    .mini-value{font-size:22px;font-weight:700;margin:0;color:#111827;}
-    .kpi-card{border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;padding:14px 16px;box-shadow:0 1px 0 rgba(0,0,0,0.03);height:110px;}
-    .kpi-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
-    .kpi-icon{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#f9fafb;font-size:18px;}
-    .kpi-number{font-size:30px;font-weight:800;margin:0;color:#111827;line-height:1;}
-    .kpi-label{font-size:13px;color:#6b7280;margin:6px 0 0 0;}
-    .delta{font-size:12px;font-weight:700;border-radius:10px;padding:4px 8px;white-space:nowrap;border:1px solid #e5e7eb;background:#f9fafb;color:#111827;}
-    .delta-up{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
-    .delta-down{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
-    .delta-flat{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8;}
-    </style>
+    f"""
+    <div class="header-row">
+      <div class="title-wrap">
+        <h1>🐶 Smart City Stray Dog Control System</h1>
+        <p>Real-Time AI Detection Monitoring</p>
+      </div>
+
+      <div class="status-wrap">
+
+        <!-- System Status box (NO TIMESTAMP PILL) -->
+        <div class="mini-box">
+          <div class="mini-top">
+            <span class="pill {status_pill}">{status_text}</span>
+          </div>
+          <p class="mini-label">Last update</p>
+          <p class="mini-value">{("—" if pd.isna(last_seen) else last_seen.strftime("%d/%m/%Y %H:%M"))}</p>
+        </div>
+
+        <!-- New Alerts box (RED, NO "10 min") -->
+        <div class="mini-box mini-box-alert">
+          <div class="mini-top">
+            <span class="pill pill-alert">NEW ALERTS</span>
+          </div>
+          <p class="mini-label">Incoming alerts</p>
+          <p class="mini-value">{new_alerts_live}</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="header-divider"></div>
     """,
     unsafe_allow_html=True,
 )
+
 
 # =========================
 # HELPERS
