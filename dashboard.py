@@ -58,6 +58,20 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .smallBtnRow label{background:#fffefc;border:1px solid #E2E8F0;border-radius:12px;padding:8px 12px;}
 .smallBtnRow label:has(input:checked){background:#1D4ED8;border-color:#1D4ED8;color:#fff;}
 .smallBtnRow input{display:none;}
+/* Light, readable buttons everywhere */
+.stButton>button{
+  background:#fffefc !important;
+  color:#0F172A !important;
+  border:1px solid #E6EAF0 !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+  font-weight:800 !important;
+  width:100% !important;
+}
+.stButton>button:hover{background:#FFFDFA !important; border-color:#D5DCE6 !important;}
+.alertScroll{height:520px; overflow-y:auto; padding-right:6px;}
+.alertScroll::-webkit-scrollbar{width:8px;}
+.alertScroll::-webkit-scrollbar-thumb{background:#D5DCE6;border-radius:999px;}
 </style>""", unsafe_allow_html=True)
 
 
@@ -191,38 +205,44 @@ st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
 colL,colM,colR=st.columns([1.05,1.45,1.05])
 if "selected_alert" not in st.session_state:
     st.session_state["selected_alert"]=None
+    
 with colL:
     st.markdown("<div class='card'><div class='cardTitle'>⛔ Active Alerts</div></div>", unsafe_allow_html=True)
     st.markdown("<div class='card' style='margin-top:10px;'>", unsafe_allow_html=True)
     st.markdown("<div class='smallBtnRow'>", unsafe_allow_html=True)
     tab=st.radio("alert_tab",["All","New","Acknowledged","Dispatched"],horizontal=True,label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='alertScroll'>", unsafe_allow_html=True)
     filt=top.copy()
     if tab!="All":
         filt=filt[filt["status"].astype(str).str.upper()==tab.upper()]
     filt=filt.sort_values("timestamp", ascending=False).head(30)
-    for _,r in filt.iterrows():
+    for _, r in filt.iterrows():
         did=str(r["detection_id"])
         selected=(st.session_state["selected_alert"]==did)
         sev_html=sev_pill(r["severity"])
-        item_bg="#F8FAFF" if selected else "#FFFFFF"
-        item_bd="#93C5FD" if selected else "#EEF2F6"
         dogs=int(r["dogs"])
         ago=time_ago(r["timestamp"])
         conf=str(r["confidence"])
-        st.markdown(f"""<div class="alertItem" style="background:{item_bg};border-color:{item_bd};" onclick="null">
-<div class="alertHeader"><div class="alertId">●&nbsp;&nbsp;{did}</div><div>{sev_html}</div></div>
-<div class="alertMain">{dogs} Dog{'s' if dogs!=1 else ''} Detected</div>
-<div class="subtle" style="margin-top:2px;font-weight:700;">{r['breed']}</div>
-<div class="alertMeta">
-<div>📍 {r['location']}</div>
-<div>🕒 {ago}</div>
+        bg="#F8FAFF" if selected else "#fffefc"
+        st.markdown(f"<div style='background:{bg};border:1px solid #EEF2F6;border-radius:14px;padding:12px;margin-bottom:12px;'>", unsafe_allow_html=True)
+        st.markdown(f"""
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+  <div style="font-weight:900;color:#0F172A;">●&nbsp;&nbsp;{did}</div>
+  <div>{sev_html}</div>
 </div>
-<div class="alertFooter"><div></div><div>{conf}% confidence</div></div>
-</div>""", unsafe_allow_html=True)
+<div style="font-size:18px;font-weight:900;color:#0F172A;margin-top:6px;">{dogs} Dog{'s' if dogs!=1 else ''} Detected</div>
+<div class="subtle" style="margin-top:2px;font-weight:700;">{r['breed']}</div>
+<div style="margin-top:8px;color:#475569;font-weight:700;font-size:13px;">📍 {r['location']}</div>
+<div style="margin-top:6px;color:#475569;font-weight:700;font-size:13px;">🕒 {ago}</div>
+<div style="margin-top:8px;display:flex;justify-content:flex-end;color:#64748B;font-weight:800;font-size:13px;">{conf}% confidence</div>
+""", unsafe_allow_html=True)
         if st.button(f"Select {did}", key=f"sel_{did}"):
             st.session_state["selected_alert"]=did
+        st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
 with colM:
     st.markdown("<div class='card'><div style='display:flex;justify-content:space-between;align-items:center;gap:10px;'><div class='cardTitle'>📷 Camera Feeds & Snapshots</div><div style='display:flex;gap:10px;'><div class='smallBtnRow'>", unsafe_allow_html=True)
     view=st.radio("cam_view",["Gallery","Single"],horizontal=True,label_visibility="collapsed")
