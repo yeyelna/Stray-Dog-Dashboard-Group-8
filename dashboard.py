@@ -1,569 +1,293 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta, timezone
-try:
-    from streamlit_autorefresh import st_autorefresh
-    HAS_AUTOREFRESH=True
-except Exception:
-    HAS_AUTOREFRESH=False
-try:
-    import plotly.graph_objects as go
-    HAS_PLOTLY=True
-except Exception:
-    HAS_PLOTLY=False
-
-st.set_page_config(page_title="Smart City Stray Dog Control System",page_icon="🐕",layout="wide")
-CREAM_BG="#f7f4ef"
-
-def inject_css():
-    st.markdown(f"""
+import matplotlib.pyplot as plt
+import io
+import traceback
+import requests
+from datetime import datetime,timedelta
+from zoneinfo import ZoneInfo
+from streamlit_autorefresh import st_autorefresh
+TZ=ZoneInfo("Asia/Kuala_Lumpur")
+REFRESH_MS=3000
+ACTIVE_SEC=120
+WINDOW_SEC=30
+MAX_EVENTS_WINDOW=10
+ALERT_LOOKBACK_MIN=30
+HEATMAP_LOOKBACK_HR=2
+SHEET_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
+st.set_page_config(page_title="Stray Dog Control System",layout="wide")
+st_autorefresh(interval=REFRESH_MS,key="data_refresh")
+st.markdown("""
 <style>
-:root {{
-  --cream:{CREAM_BG};
-  --card:#ffffff;
-  --border:rgba(15,23,42,0.08);
-  --shadow:0 10px 30px rgba(15,23,42,0.08);
-  --radius:18px;
-  --muted:#64748b;
-  --text:#0f172a;
-}}
-html, body, [data-testid="stAppViewContainer"], .stApp {{
-  background: var(--cream) !important;
-}}
-[data-testid="stHeader"], [data-testid="stToolbar"] {{
-  background: transparent !important;
-}}
-.block-container {{
-  padding-top: 1.0rem;
-  padding-bottom: 2rem;
-}}
-.card {{
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 16px 16px;
-}}
-.card-tight {{
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 12px 14px;
-}}
-.section-title {{
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
-  display:flex;
-  align-items:center;
-  gap:10px;
-}}
-.section-sub {{
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 2px;
-}}
-.kpi-wrap {{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-}}
-.kpi-ico {{
-  width:34px;height:34px;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);
-}}
-.kpi-label {{
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 2px;
-}}
-.kpi-value {{
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.0;
-  margin-top: 6px;
-}}
-.kpi-delta {{
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-}}
-.badge {{
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  display:inline-block;
-  border: 1px solid var(--border);
-}}
-.badge-low {{
-  color:#1d4ed8;background:rgba(59,130,246,0.10);
-}}
-.badge-med {{
-  color:#a16207;background:rgba(234,179,8,0.14);
-}}
-.badge-high {{
-  color:#c2410c;background:rgba(249,115,22,0.14);
-}}
-.badge-crit {{
-  color:#b91c1c;background:rgba(239,68,68,0.14);
-}}
-.badge-new {{
-  color:#b91c1c;background:rgba(239,68,68,0.14);
-}}
-.badge-ack {{
-  color:#a16207;background:rgba(234,179,8,0.14);
-}}
-.badge-dis {{
-  color:#1d4ed8;background:rgba(59,130,246,0.12);
-}}
-.small-muted {{
-  color: var(--muted);
-  font-size: 12px;
-}}
-.hr {{
-  height:1px;background:rgba(15,23,42,0.06);margin:10px 0 10px 0;
-}}
-.alert-item {{
-  border: 1px solid rgba(15,23,42,0.08);
-  border-radius: 16px;
-  padding: 12px 12px;
-  background: #fff;
-}}
-.alert-top {{
-  display:flex;justify-content:space-between;align-items:center;
-}}
-.alert-id {{
-  font-weight:800;color:var(--text);font-size:13px;
-}}
-.alert-main {{
-  font-weight:800;color:var(--text);font-size:16px;margin-top:8px;
-}}
-.alert-meta {{
-  color:var(--muted);font-size:13px;margin-top:2px;
-}}
-.pill {{
-  font-size:12px;font-weight:800;padding:6px 10px;border-radius:999px;border:1px solid var(--border);
-}}
-.pill-on {{
-  color:#15803d;background:rgba(34,197,94,0.14);
-}}
-.pill-rec {{
-  color:#b91c1c;background:rgba(239,68,68,0.14);
-}}
-.cam-tag {{
-  font-size:12px;font-weight:800;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.35);
-  background:rgba(15,23,42,0.65);color:#fff;
-}}
-.overlay {{
-  position:absolute;left:10px;top:10px;display:flex;gap:8px;align-items:center;
-}}
-.overlay2 {{
-  position:absolute;right:10px;top:10px;
-}}
-.img-wrap {{
-  position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,0.08);
-}}
-.img-bot {{
-  position:absolute;left:10px;bottom:10px;
-}}
-.det-pill {{
-  font-size:12px;font-weight:800;padding:7px 10px;border-radius:999px;border:1px solid rgba(15,23,42,0.10);
-  background:rgba(245,158,11,0.16);color:#92400e;
-}}
+html, body, [class*="css"] {background:#f6f7fb !important;}
+.block-container {padding-top:1.2rem;}
+.header-bar {background:#ffffff;border:1px solid #e8eaf0;border-radius:16px;padding:16px 18px;box-shadow:0 2px 10px rgba(16,24,40,0.04);}
+.title {font-size:28px;font-weight:800;color:#0f172a;margin:0;}
+.subtitle {font-size:13px;color:#64748b;margin-top:4px;}
+.clock {text-align:right;color:#0f172a;font-weight:700;}
+.date {text-align:right;color:#64748b;font-size:12px;margin-top:2px;}
+.kpi-card {background:#ffffff;border:1px solid #e8eaf0;border-radius:16px;padding:14px 14px;box-shadow:0 2px 10px rgba(16,24,40,0.04);}
+.kpi-label {font-size:12px;color:#64748b;margin-bottom:6px;display:flex;gap:8px;align-items:center;}
+.kpi-value {font-size:22px;font-weight:800;color:#0f172a;line-height:1;}
+.kpi-sub {font-size:12px;color:#64748b;margin-top:6px;}
+.badge {display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid #e8eaf0;background:#f8fafc;color:#0f172a;}
+.badge-high {background:#ffe4e6;border-color:#fecdd3;color:#9f1239;}
+.badge-med {background:#fff7ed;border-color:#fed7aa;color:#9a3412;}
+.badge-low {background:#ecfeff;border-color:#a5f3fc;color:#155e75;}
+.panel {background:#ffffff;border:1px solid #e8eaf0;border-radius:16px;padding:14px 14px;box-shadow:0 2px 10px rgba(16,24,40,0.04);}
+.panel-title {font-size:14px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.smallbox {background:#f8fafc;border:1px solid #e8eaf0;border-radius:12px;padding:10px;}
+.alert-item {border-left:6px solid #e8eaf0;background:#ffffff;border:1px solid #e8eaf0;border-radius:14px;padding:10px 10px;margin-bottom:10px;}
+.alert-time {font-size:12px;color:#64748b;margin-bottom:2px;}
+.alert-title {font-size:13px;font-weight:800;color:#0f172a;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.alert-meta {font-size:12px;color:#334155;margin-top:4px;}
+.footer {color:#64748b;font-size:12px;margin-top:6px;}
 </style>
 """,unsafe_allow_html=True)
-
-def parse_ts(x):
-    if pd.isna(x):
-        return pd.NaT
-    s=str(x).strip()
-    for fmt in ["%d/%m/%Y %H:%M","%d/%m/%Y %I:%M %p","%b %d, %I:%M:%S %p","%b %d, %I:%M %p"]:
-        try:
-            return datetime.strptime(s,fmt)
-        except Exception:
-            pass
+def trapmf(x,a,b,c,d):
+    x=float(x)
+    if x<=a or x>=d:
+        return 0.0
+    if b<=x<=c:
+        return 1.0
+    if a<x<b:
+        return (x-a)/(b-a) if b-a!=0 else 0.0
+    return (d-x)/(d-c) if d-c!=0 else 0.0
+def severity_fuzzy_basic(C,N,R):
+    conf_high=trapmf(C,0.60,0.75,1.00,1.00)
+    conf_med=trapmf(C,0.40,0.55,0.75,0.90)
+    many=trapmf(min(N/3.0,1.0),0.40,0.60,1.00,1.00)
+    freq_high=trapmf(R,0.40,0.60,1.00,1.00)
+    r_high=max(min(conf_high,freq_high),many)
+    r_med=max(min(conf_med,freq_high),min(conf_high,trapmf(R,0.20,0.35,0.60,0.80)))
+    r_low=max(trapmf(C,0.00,0.00,0.35,0.55),trapmf(R,0.00,0.00,0.15,0.30))
+    score=(r_low*0.2+r_med*0.6+r_high*0.9)/(r_low+r_med+r_high+1e-9)
+    if score>=0.75:
+        return "HIGH",score
+    if score>=0.45:
+        return "MED",score
+    return "LOW",score
+def load_data_from_sheet(url):
     try:
-        s2=s.replace("Z","+00:00")
-        dt=datetime.fromisoformat(s2)
-        if dt.tzinfo is not None:
-            dt=dt.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None)
-        return dt
+        df=pd.read_csv(url)
     except Exception:
-        return pd.NaT
-
-def severity_from(dogs,conf):
-    if dogs>=3:
-        return "CRITICAL"
-    if dogs==2 and conf>=0.90:
-        return "HIGH"
-    if conf>=0.86:
-        return "MEDIUM"
-    return "LOW"
-
-def status_from(sev,minutes_ago):
-    if sev in ["CRITICAL","HIGH"] and minutes_ago<=12:
-        return "NEW"
-    if minutes_ago<=30:
-        return "ACKNOWLEDGED"
-    return "DISPATCHED"
-
-def make_demo_events(now):
-    rows=[]
-    seed=[
-        ("DET-055844","West End Avenue","CAM-091",1,"Small breed",0.90,"LOW","NEW"),
-        ("DET-001","Central Park, Zone A3","CAM-023",2,"Mixed",0.95,"HIGH","NEW"),
-        ("DET-002","Market Street, Intersection 5B","CAM-047",1,"Large breed",0.88,"MEDIUM","ACKNOWLEDGED"),
-        ("DET-003","Riverside Drive, Block 12","CAM-089",3,"Pack detected",0.92,"CRITICAL","DISPATCHED"),
-        ("DET-004","School District 4, Gate C","CAM-105",1,"Medium breed",0.85,"MEDIUM","ACKNOWLEDGED"),
-        ("DET-005","Industrial Area, Sector 7","CAM-132",1,"Small breed",0.78,"LOW","NEW"),
-    ]
-    mins=[0,2,5,10,15,20]
-    for (det,loc,cam,dogs,breed,conf,sev,status),m in zip(seed,mins):
-        ts=now-timedelta(minutes=m)
-        rows.append({"timestamp":ts,"detection_id":det,"location":loc,"camera":cam,"dogs":dogs,"breed":breed,"confidence":conf,"severity":sev,"status":status})
-    return pd.DataFrame(rows).sort_values("timestamp",ascending=False)
-
-def make_demo_timeseries(now):
-    hours=pd.date_range(now.replace(minute=0,second=0,microsecond=0)-timedelta(hours=23),periods=24,freq="H")
-    detections=np.clip(np.round(10+6*np.sin(np.linspace(0,3*np.pi,24))+np.random.normal(0,2,24)),0,None).astype(int)
-    dogs=np.clip(detections+np.random.randint(-3,6,size=24),0,None).astype(int)
-    df=pd.DataFrame({"time":hours,"detections":detections,"dogs":dogs})
+        text=requests.get(url,timeout=20).text
+        df=pd.read_csv(io.StringIO(text),engine="python",on_bad_lines="skip")
+    df.columns=[c.strip() for c in df.columns]
+    expected=["timestamp","camera_id","location","class","confidence","dog_count","image_url"]
+    for c in expected:
+        if c not in df.columns:
+            df[c]=None
+    df["timestamp"]=pd.to_datetime(df["timestamp"],errors="coerce")
+    if pd.api.types.is_datetime64tz_dtype(df["timestamp"]):
+        df["timestamp"]=df["timestamp"].dt.tz_convert(TZ).dt.tz_localize(None)
+    df=df.dropna(subset=["timestamp"]).sort_values("timestamp",ascending=True)
+    df["confidence"]=pd.to_numeric(df["confidence"],errors="coerce").fillna(0.0).clip(0,1)
+    df["dog_count"]=pd.to_numeric(df["dog_count"],errors="coerce").fillna(1).astype(int)
+    df["camera_id"]=df["camera_id"].fillna("unknown").astype(str)
+    df["location"]=df["location"].fillna("unknown").astype(str)
+    df["class"]=df["class"].fillna("dog").astype(str)
+    df["image_url"]=df["image_url"].fillna("").astype(str)
     return df
-
-def kpi_card(title,value,delta,icon,accent="neutral"):
-    if accent=="danger":
-        dstyle="color:#b91c1c;background:rgba(239,68,68,0.14);"
-    elif accent=="warn":
-        dstyle="color:#a16207;background:rgba(234,179,8,0.14);"
-    elif accent=="good":
-        dstyle="color:#15803d;background:rgba(34,197,94,0.14);"
-    else:
-        dstyle="color:#0f172a;background:rgba(15,23,42,0.06);"
-    st.markdown(f"""
-<div class="card-tight">
-  <div class="kpi-wrap">
-    <div>
-      <div class="kpi-ico">{icon}</div>
-      <div class="kpi-value">{value}</div>
-      <div class="kpi-label">{title}</div>
-    </div>
-    <div class="kpi-delta" style="{dstyle}">{delta}</div>
-  </div>
-</div>
-""",unsafe_allow_html=True)
-
-def badge(label,kind):
-    cls="badge"
-    if kind=="LOW": cls+=" badge-low"
-    if kind=="MEDIUM": cls+=" badge-med"
-    if kind=="HIGH": cls+=" badge-high"
-    if kind=="CRITICAL": cls+=" badge-crit"
-    if kind=="NEW": cls+=" badge-new"
-    if kind=="ACKNOWLEDGED": cls+=" badge-ack"
-    if kind=="DISPATCHED": cls+=" badge-dis"
-    return f'<span class="{cls}">{label}</span>'
-
-def human_minutes_ago(ts,now):
-    m=int(max(0,round((now-ts).total_seconds()/60)))
-    if m==0: return "just now"
-    if m==1: return "1m ago"
-    return f"{m}m ago"
-
-def plot_line(ts_df):
-    if HAS_PLOTLY:
-        fig=go.Figure()
-        fig.add_trace(go.Scatter(x=ts_df["time"],y=ts_df["detections"],mode="lines+markers",name="Detections"))
-        fig.add_trace(go.Scatter(x=ts_df["time"],y=ts_df["dogs"],mode="lines+markers",name="Dogs"))
-        fig.update_layout(height=360,margin=dict(l=10,r=10,t=10,b=10),legend=dict(orientation="h",yanchor="bottom",y=-0.25,xanchor="center",x=0.5))
-        fig.update_xaxes(showgrid=True,gridcolor="rgba(15,23,42,0.08)")
-        fig.update_yaxes(showgrid=True,gridcolor="rgba(15,23,42,0.08)")
-        st.plotly_chart(fig,use_container_width=True)
-    else:
-        st.line_chart(ts_df.set_index("time")[["detections","dogs"]],height=360)
-
-def load_events():
-    url=st.secrets.get("EVENTS_CSV_URL","").strip() if hasattr(st,"secrets") else ""
-    if url:
-        try:
-            df=pd.read_csv(url)
-            if "timestamp" in df.columns:
-                df["timestamp"]=df["timestamp"].apply(parse_ts)
-            for col in ["detection_id","location","camera","dogs","breed","confidence","severity","status"]:
-                if col not in df.columns:
-                    df[col]=np.nan
-            df=df.dropna(subset=["timestamp"]).sort_values("timestamp",ascending=False)
-            df["dogs"]=pd.to_numeric(df["dogs"],errors="coerce").fillna(1).astype(int)
-            df["confidence"]=pd.to_numeric(df["confidence"],errors="coerce").fillna(0.85).astype(float)
-            df["severity"]=df.apply(lambda r: r["severity"] if pd.notna(r["severity"]) else severity_from(int(r["dogs"]),float(r["confidence"])),axis=1)
-            now=datetime.now()
-            df["status"]=df.apply(lambda r: r["status"] if pd.notna(r["status"]) else status_from(r["severity"],int((now-r["timestamp"]).total_seconds()/60)),axis=1)
-            return df
-        except Exception:
-            pass
-    now=datetime.now()
-    return make_demo_events(now)
-
-def camera_image_for(camera):
-    cam_map={
-        "CAM-023":"https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
-        "CAM-047":"https://images.unsplash.com/photo-1526481280695-3c687fd643ed?auto=format&fit=crop&w=1200&q=80",
-        "CAM-089":"https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80",
-        "CAM-105":"https://images.unsplash.com/photo-1581092919535-7146f7f403b1?auto=format&fit=crop&w=1200&q=80",
-        "CAM-091":"https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?auto=format&fit=crop&w=1200&q=80",
-        "CAM-132":"https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80",
-    }
-    return cam_map.get(camera,"https://picsum.photos/1200/700")
-
-inject_css()
-if HAS_AUTOREFRESH:
-    st_autorefresh(interval=8000,key="auto_refresh")
-
-st.markdown('<div class="section-title">🐕 Smart City Stray Dog Control System</div><div class="section-sub">Live monitoring • alerts • response coordination</div>',unsafe_allow_html=True)
-
-events=load_events().copy()
-now=datetime.now()
-
-colk1,colk2,colk3=st.columns([1,1,1],gap="large")
-new_alerts=int((events["status"]=="NEW").sum())
-total_dogs=int(events["dogs"].sum())
-high_priority=int(events["severity"].isin(["HIGH","CRITICAL"]).sum())
-with colk1:
-    kpi_card("New Alerts",new_alerts,"+12%","⚠️","danger" if new_alerts>0 else "neutral")
-with colk2:
-    kpi_card("Total Dogs Detected",total_dogs,"+8%","📈","neutral")
-with colk3:
-    kpi_card("High Priority",high_priority,"-5%","⛔","warn" if high_priority>0 else "good")
-
-st.markdown("<div style='height:10px'></div>",unsafe_allow_html=True)
-
-c1,c2=st.columns([1.05,2.0],gap="large")
-with c1:
-    st.markdown('<div class="card"><div class="section-title">ℹ️ Recent Detection Events <span class="small-muted">(Last 6 records)</span></div><div class="hr"></div>',unsafe_allow_html=True)
-    show=events.head(6).copy()
-    show["Timestamp"]=show["timestamp"].dt.strftime("%b %d, %I:%M:%S %p")
-    show["Detection ID"]=show["detection_id"]
-    show["Location"]=show["location"]
-    show["Camera"]=show["camera"]
-    show["Dogs"]=show["dogs"].astype(int)
-    show["Breed"]=show["breed"].fillna("Unknown")
-    show["Confidence"]=(show["confidence"]*100).round(0).astype(int).astype(str)+"%"
-    show["Severity"]=show["severity"].apply(lambda x: x.title())
-    show["Status"]=show["status"].apply(lambda x: x.title())
-    st.dataframe(show[["Timestamp","Detection ID","Location","Camera","Dogs","Breed","Confidence","Severity","Status"]],use_container_width=True,hide_index=True)
-    st.markdown("</div>",unsafe_allow_html=True)
-
-with c2:
-    st.markdown('<div class="card"><div class="kpi-wrap"><div><div class="section-title">📈 Detection Trends & Analytics</div><div class="section-sub">Detections and response patterns</div></div>',unsafe_allow_html=True)
-    topa,topb,topc=st.columns([1,1,1],gap="small")
-    with topa:
-        view=st.segmented_control("Range",options=["24 Hours","7 Days"],default="24 Hours",label_visibility="collapsed")
-    with topb:
-        metric_mode=st.segmented_control("Metric",options=["Detections","Dogs"],default="Detections",label_visibility="collapsed")
-    with topc:
-        sev_filter=st.segmented_control("Severity",options=["All","LOW","MEDIUM","HIGH","CRITICAL"],default="All",label_visibility="collapsed")
-    st.markdown("</div><div class='hr'></div>",unsafe_allow_html=True)
-    ts=make_demo_timeseries(now)
-    if view=="7 Days":
-        days=pd.date_range(now.date()-timedelta(days=6),periods=7,freq="D")
-        detections=np.clip(np.round(140+20*np.sin(np.linspace(0,2*np.pi,7))+np.random.normal(0,10,7)),0,None).astype(int)
-        dogs=np.clip(detections+np.random.randint(-20,35,size=7),0,None).astype(int)
-        ts=pd.DataFrame({"time":days,"detections":detections,"dogs":dogs})
-    if metric_mode=="Detections":
-        plot_line(ts[["time","detections","dogs"]])
-    else:
-        plot_line(ts[["time","detections","dogs"]])
-    peak_text="14:00 - 16:00" if view=="24 Hours" else "Fri - Sun"
-    avg_daily=int(ts["detections"].mean()) if view=="7 Days" else int(ts["detections"].sum()/1)
-    a1,a2=st.columns([1,1])
-    with a1:
-        st.markdown(f"<div class='small-muted' style='text-align:center;'>Peak Window</div><div style='text-align:center;font-size:22px;font-weight:900;color:#6d28d9;margin-top:4px;'>{peak_text}</div>",unsafe_allow_html=True)
-    with a2:
-        st.markdown(f"<div class='small-muted' style='text-align:center;'>Avg {( 'Daily' if view=='7 Days' else '24h' )} Detections</div><div style='text-align:center;font-size:22px;font-weight:900;color:#2563eb;margin-top:4px;'>{avg_daily}</div>",unsafe_allow_html=True)
-    st.markdown("</div>",unsafe_allow_html=True)
-
-st.markdown("<div style='height:10px'></div>",unsafe_allow_html=True)
-
-left,mid,right=st.columns([1.05,2.0,1.05],gap="large")
-if "selected_det" not in st.session_state:
-    st.session_state.selected_det=None
-
+def add_event_rate_and_severity(df):
+    if df.empty:
+        df["event_rate"]=0.0
+        df["severity"]="LOW"
+        df["risk_score"]=0.0
+        return df
+    df=df.copy().sort_values("timestamp",ascending=True)
+    def _per_camera(g):
+        g=g.sort_values("timestamp").copy()
+        g=g.set_index("timestamp")
+        cnt=g["confidence"].rolling(f"{WINDOW_SEC}s").count()
+        g["event_rate"]=(cnt/MAX_EVENTS_WINDOW).clip(0,1)
+        return g.reset_index()
+    df=df.groupby("camera_id",dropna=False,group_keys=False).apply(_per_camera)
+    sev=df.apply(lambda r: pd.Series(severity_fuzzy_basic(r["confidence"],r["dog_count"],r["event_rate"])),axis=1)
+    df["severity"]=sev.iloc[:,0]
+    df["risk_score"]=sev.iloc[:,1]
+    return df
+def conf_label(c):
+    if c>=0.80:
+        return "High"
+    if c>=0.55:
+        return "Medium"
+    return "Low"
+def badge_html(level):
+    if level=="HIGH":
+        return "<span class='badge badge-high'>HIGH</span>"
+    if level=="MED":
+        return "<span class='badge badge-med'>MED</span>"
+    return "<span class='badge badge-low'>LOW</span>"
+def kpi_card(icon,label,value,sub):
+    return f"""<div class="kpi-card"><div class="kpi-label">{icon}<span>{label}</span></div><div class="kpi-value">{value}</div><div class="kpi-sub">{sub}</div></div>"""
+def stable_xy(key):
+    h=abs(hash(key))%(10**8)
+    x=(h%1000)/999.0
+    y=((h//1000)%1000)/999.0
+    return x,y
+def render_heatmap(df_recent):
+    grid=np.zeros((120,120),dtype=float)
+    for _,r in df_recent.iterrows():
+        k=f"{r.get('camera_id','')}-{r.get('location','')}"
+        x,y=stable_xy(k)
+        cx=int(x*(grid.shape[1]-1))
+        cy=int(y*(grid.shape[0]-1))
+        amp=1.0+0.3*max(int(r.get("dog_count",1)),1)
+        sx=6
+        sy=6
+        xs=np.arange(grid.shape[1])
+        ys=np.arange(grid.shape[0])
+        X,Y=np.meshgrid(xs,ys)
+        gauss=np.exp(-(((X-cx)**2)/(2*sx*sx)+((Y-cy)**2)/(2*sy*sy)))*amp
+        grid+=gauss
+    fig=plt.figure(figsize=(5.2,3.0),dpi=150)
+    plt.imshow(grid,origin="lower")
+    plt.xticks([])
+    plt.yticks([])
+    plt.tight_layout()
+    st.pyplot(fig,clear_figure=True)
+st.caption("Status: Loading Google Sheets CSV...")
+try:
+    df=load_data_from_sheet(SHEET_CSV_URL)
+except Exception as e:
+    st.error("Failed to load Google Sheets CSV.")
+    st.code(str(e))
+    st.code(traceback.format_exc())
+    st.stop()
+df=add_event_rate_and_severity(df)
+with st.expander("Debug: Loaded data preview"):
+    st.write("Columns:",list(df.columns))
+    st.dataframe(df.head(5),use_container_width=True)
+now=datetime.now(TZ).replace(tzinfo=None)
+today=now.date()
+yesterday=(now-timedelta(days=1)).date()
+st.markdown('<div class="header-bar">',unsafe_allow_html=True)
+hL,hR=st.columns([4,1])
+with hL:
+    st.markdown('<div class="title">Stray Dog Control System</div>',unsafe_allow_html=True)
+    st.markdown('<div class="subtitle">Municipal Smart City Monitoring Dashboard</div>',unsafe_allow_html=True)
+with hR:
+    st.markdown(f"<div class='clock'>{datetime.now(TZ).strftime('%I:%M:%S %p')}</div>",unsafe_allow_html=True)
+    st.markdown(f"<div class='date'>{datetime.now(TZ).strftime('%d/%m/%Y')}</div>",unsafe_allow_html=True)
+st.markdown("</div>",unsafe_allow_html=True)
+with st.sidebar:
+    st.header("Filters")
+    cameras=["All"]+sorted(df["camera_id"].dropna().unique().tolist())
+    selected_camera=st.selectbox("Camera",cameras)
+    locations=["All"]+sorted(df["location"].dropna().unique().tolist())
+    selected_location=st.selectbox("Location",locations)
+    sevs=["All","HIGH","MED","LOW"]
+    selected_sev=st.selectbox("Severity",sevs)
+filtered=df.copy()
+if selected_camera!="All":
+    filtered=filtered[filtered["camera_id"]==selected_camera]
+if selected_location!="All":
+    filtered=filtered[filtered["location"]==selected_location]
+if selected_sev!="All":
+    filtered=filtered[filtered["severity"]==selected_sev]
+if filtered.empty:
+    st.info("No events match the selected filters.")
+    st.stop()
+df_today=df[df["timestamp"].dt.date==today]
+df_yday=df[df["timestamp"].dt.date==yesterday]
+today_count=len(df_today)
+yday_count=len(df_yday)
+delta=today_count-yday_count
+if yday_count==0:
+    delta_text="No baseline for yesterday"
+else:
+    pct=(delta/max(yday_count,1))*100.0
+    arrow="▲" if delta>0 else "▼" if delta<0 else "•"
+    direction="higher" if delta>0 else "lower" if delta<0 else "same"
+    delta_text=f"{arrow} {abs(pct):.0f}% {direction} vs yesterday"
+recent_cut=now-timedelta(minutes=ALERT_LOOKBACK_MIN)
+df_recent_alerts=df[df["timestamp"]>=recent_cut]
+active_alerts=int((df_recent_alerts["severity"].isin(["MED","HIGH"])).sum())
+critical_alerts=int((df_recent_alerts["severity"]=="HIGH").sum())
+all_cams=df["camera_id"].dropna().unique().tolist()
+cam_total=len(all_cams)
+if cam_total==0:
+    oper_pct=0
+else:
+    last_per_cam=df.groupby("camera_id")["timestamp"].max()
+    active_cams=int((last_per_cam>=now-timedelta(seconds=ACTIVE_SEC)).sum())
+    oper_pct=int(round((active_cams/max(cam_total,1))*100))
+focus_loc=selected_location if selected_location!="All" else "All locations"
+k1,k2,k3,k4,k5=st.columns([1.2,1.2,1.2,1.2,1.2])
+with k1:
+    st.markdown(kpi_card("📊","Total Detections Today",f"{today_count}",delta_text),unsafe_allow_html=True)
+with k2:
+    st.markdown(kpi_card("🚨","Active Alerts",f"{active_alerts}",f"{critical_alerts} high severity"),unsafe_allow_html=True)
+with k3:
+    st.markdown(kpi_card("📍","Focus Location",f"{focus_loc}","Filtered monitoring area"),unsafe_allow_html=True)
+with k4:
+    st.markdown(kpi_card("📷","Active Cameras",f"{cam_total}",f"{oper_pct}% operational (last {ACTIVE_SEC}s)"),unsafe_allow_html=True)
+with k5:
+    st.markdown(kpi_card("⏱️","Refresh Cycle",f"{int(REFRESH_MS/1000)}s","Auto-check for new data"),unsafe_allow_html=True)
+left,right=st.columns([2.2,1.0])
 with left:
-    st.markdown('<div class="card"><div class="section-title">❗ Active Alerts</div><div class="section-sub">Select an alert to view camera & details</div><div class="hr"></div>',unsafe_allow_html=True)
-    t_all,t_new,t_ack,t_dis=st.tabs(["All","New","Acknowledged","Dispatched"])
-    def alert_list(df):
-        if df.empty:
-            st.info("No alerts in this view.")
-            return
-        for _,r in df.iterrows():
-            sev=r["severity"]
-            stat=r["status"]
-            conf=int(round(float(r["confidence"])*100))
-            mins=human_minutes_ago(r["timestamp"],now)
-            sev_badge=badge(sev,sev)
-            stat_badge=badge(stat,stat)
-            st.markdown(f"""
-<div class="alert-item">
-  <div class="alert-top">
-    <div class="alert-id">{r["detection_id"]}</div>
-    <div style="display:flex;gap:6px;align-items:center;">{sev_badge}{stat_badge}</div>
-  </div>
-  <div class="alert-main">{int(r["dogs"])} Dogs Detected</div>
-  <div class="alert-meta">{r["breed"]}</div>
-  <div class="alert-meta">📍 {r["location"]}</div>
-  <div class="alert-meta">🕒 {mins} • {conf}% confidence</div>
-</div>
-""",unsafe_allow_html=True)
-            btn_key=f"sel_{r['detection_id']}"
-            if st.button("View",key=btn_key,use_container_width=True):
-                st.session_state.selected_det=r["detection_id"]
-                st.session_state.selected_cam=r["camera"]
-                st.session_state.selected_loc=r["location"]
-                st.session_state.selected_sev=r["severity"]
-                st.session_state.selected_stat=r["status"]
-                st.session_state.selected_dogs=int(r["dogs"])
-                st.session_state.selected_conf=conf
-                st.session_state.selected_breed=r["breed"]
-            st.markdown("<div style='height:8px'></div>",unsafe_allow_html=True)
-    with t_all:
-        df=events.copy()
-        if sev_filter!="All":
-            df=df[df["severity"]==sev_filter]
-        alert_list(df.head(12))
-    with t_new:
-        df=events[events["status"]=="NEW"].copy()
-        if sev_filter!="All":
-            df=df[df["severity"]==sev_filter]
-        alert_list(df.head(12))
-    with t_ack:
-        df=events[events["status"]=="ACKNOWLEDGED"].copy()
-        if sev_filter!="All":
-            df=df[df["severity"]==sev_filter]
-        alert_list(df.head(12))
-    with t_dis:
-        df=events[events["status"]=="DISPATCHED"].copy()
-        if sev_filter!="All":
-            df=df[df["severity"]==sev_filter]
-        alert_list(df.head(12))
-    st.markdown("</div>",unsafe_allow_html=True)
-
-with mid:
-    st.markdown('<div class="card"><div class="kpi-wrap"><div><div class="section-title">📷 Camera Feeds & Snapshots</div><div class="section-sub">Gallery view • select an alert to open single view</div></div>',unsafe_allow_html=True)
-    v1,v2=st.columns([1,1],gap="small")
-    with v1:
-        view_mode=st.segmented_control("View",options=["Gallery","Single"],default="Gallery",label_visibility="collapsed")
-    with v2:
-        st.write("")
-    st.markdown("</div><div class='hr'></div>",unsafe_allow_html=True)
-    top4=events.head(4).copy()
-    if view_mode=="Gallery":
-        g1,g2=st.columns(2,gap="large")
-        cards=[top4.iloc[0],top4.iloc[1],top4.iloc[2],top4.iloc[3]] if len(top4)>=4 else [r for _,r in top4.iterrows()]
-        for i,r in enumerate(cards):
-            target=g1 if i%2==0 else g2
-            with target:
-                img=camera_image_for(r["camera"])
-                mins=human_minutes_ago(r["timestamp"],now)
-                st.markdown('<div class="img-wrap">',unsafe_allow_html=True)
-                st.image(img,use_container_width=True)
-                st.markdown(f"""
-<div class="overlay">
-  <span class="pill pill-on">● ONLINE</span>
-  <span class="pill pill-rec">● REC</span>
-</div>
-<div class="overlay2">
-  <span class="cam-tag">{r["camera"]}</span>
-</div>
-<div class="img-bot">
-  <span class="det-pill">📸 Detection {mins}</span>
-</div>
-""",unsafe_allow_html=True)
-                st.markdown("</div>",unsafe_allow_html=True)
-                st.markdown(f"<div style='font-weight:900;font-size:16px;margin-top:10px;color:#0f172a;'>{r['location'].split(',')[0]}</div>",unsafe_allow_html=True)
-                st.markdown(f"<div class='small-muted' style='margin-top:-2px;'>{r['location']}</div>",unsafe_allow_html=True)
-                if st.button("Open",key=f"open_{r['detection_id']}",use_container_width=True):
-                    st.session_state.selected_det=r["detection_id"]
-                    st.session_state.selected_cam=r["camera"]
-                    st.session_state.selected_loc=r["location"]
-                    st.session_state.selected_sev=r["severity"]
-                    st.session_state.selected_stat=r["status"]
-                    st.session_state.selected_dogs=int(r["dogs"])
-                    st.session_state.selected_conf=int(round(float(r["confidence"])*100))
-                    st.session_state.selected_breed=r["breed"]
-                st.markdown("<div style='height:14px'></div>",unsafe_allow_html=True)
+    st.markdown('<div class="panel">',unsafe_allow_html=True)
+    st.markdown("<div class='panel-title'>🟢 Live AI Detection Feed <span class='badge'>LIVE</span></div>",unsafe_allow_html=True)
+    latest=filtered.sort_values("timestamp").iloc[-1]
+    cam_name=latest.get("camera_id","unknown")
+    loc=latest.get("location","unknown")
+    ts=latest.get("timestamp")
+    conf=float(latest.get("confidence",0.0))
+    conf_txt=f"{conf_label(conf)} ({int(round(conf*100))}%)"
+    sev=latest.get("severity","LOW")
+    dogs=int(latest.get("dog_count",1))
+    stray_count=int(latest.get("stray_count",dogs)) if "stray_count" in filtered.columns else dogs
+    pet_count=int(latest.get("pet_count",0)) if "pet_count" in filtered.columns else 0
+    human_count=int(latest.get("human_count",0)) if "human_count" in filtered.columns else 0
+    topA,topB=st.columns([1.2,1.0])
+    with topA:
+        st.markdown(f"<div class='smallbox'><b>Camera:</b> {cam_name}<br><b>Location:</b> {loc}</div>",unsafe_allow_html=True)
+    with topB:
+        st.markdown(f"<div class='smallbox'><b>AI:</b> Detection Active<br><b>Severity:</b> {badge_html(sev)}</div>",unsafe_allow_html=True)
+    img_url=str(latest.get("image_url","")).strip()
+    if img_url!="":
+        st.image(img_url,use_container_width=True,caption="Latest detection snapshot")
     else:
-        if st.session_state.selected_det is None:
-            st.info("Choose any active alerts to open the single camera view.")
-        else:
-            cam=st.session_state.selected_cam
-            img=camera_image_for(cam)
-            st.markdown('<div class="img-wrap">',unsafe_allow_html=True)
-            st.image(img,use_container_width=True)
-            st.markdown(f"""
-<div class="overlay">
-  <span class="pill pill-on">● ONLINE</span>
-  <span class="pill pill-rec">● REC</span>
-</div>
-<div class="overlay2">
-  <span class="cam-tag">{cam}</span>
-</div>
-""",unsafe_allow_html=True)
-            st.markdown("</div>",unsafe_allow_html=True)
-            st.markdown(f"<div style='font-weight:900;font-size:18px;margin-top:12px;color:#0f172a;'>Alert {st.session_state.selected_det}</div>",unsafe_allow_html=True)
-            st.markdown(f"<div class='small-muted'>📍 {st.session_state.selected_loc}</div>",unsafe_allow_html=True)
-            s1,s2,s3,s4=st.columns([1,1,1,1],gap="small")
-            with s1:
-                st.markdown(f"<div class='card-tight'><div class='small-muted'>Dogs</div><div style='font-size:20px;font-weight:900;color:#0f172a;margin-top:4px;'>{st.session_state.selected_dogs}</div></div>",unsafe_allow_html=True)
-            with s2:
-                st.markdown(f"<div class='card-tight'><div class='small-muted'>Breed</div><div style='font-size:14px;font-weight:900;color:#0f172a;margin-top:6px;'>{st.session_state.selected_breed}</div></div>",unsafe_allow_html=True)
-            with s3:
-                st.markdown(f"<div class='card-tight'><div class='small-muted'>Confidence</div><div style='font-size:20px;font-weight:900;color:#0f172a;margin-top:4px;'>{st.session_state.selected_conf}%</div></div>",unsafe_allow_html=True)
-            with s4:
-                st.markdown(f"<div class='card-tight'><div class='small-muted'>Severity</div><div style='font-size:14px;font-weight:900;color:#0f172a;margin-top:6px;'>{st.session_state.selected_sev}</div></div>",unsafe_allow_html=True)
-            b1,b2,b3=st.columns([1,1,1],gap="small")
-            with b1:
-                if st.button("Acknowledge",use_container_width=True):
-                    events.loc[events["detection_id"]==st.session_state.selected_det,"status"]="ACKNOWLEDGED"
-                    st.toast("Acknowledged")
-            with b2:
-                if st.button("Dispatch Team",use_container_width=True):
-                    events.loc[events["detection_id"]==st.session_state.selected_det,"status"]="DISPATCHED"
-                    st.toast("Dispatched")
-            with b3:
-                if st.button("Close View",use_container_width=True):
-                    st.session_state.selected_det=None
-                    st.toast("Closed")
-
+        st.info("No image_url found. Add image_url in Google Sheets to display snapshots.")
+    bL,bR=st.columns([1.2,1.0])
+    with bL:
+        st.markdown(f"<div class='smallbox'><b>Objects:</b> {stray_count} Stray dogs, {pet_count} Pet dogs, {human_count} Humans<br><b>Confidence:</b> {conf_txt}</div>",unsafe_allow_html=True)
+    with bR:
+        ts_str=ts.strftime("%d/%m/%Y %I:%M:%S %p") if isinstance(ts,pd.Timestamp) else str(ts)
+        st.markdown(f"<div class='smallbox'><b>Timestamp:</b><br>{ts_str}</div>",unsafe_allow_html=True)
+    st.markdown("</div>",unsafe_allow_html=True)
 with right:
-    st.markdown('<div class="card"><div class="section-title">🧾 Alert Details</div><div class="section-sub">Operational response notes</div><div class="hr"></div>',unsafe_allow_html=True)
-    if st.session_state.selected_det is None:
-        st.info("Please choose any active alerts.")
+    st.markdown('<div class="panel">',unsafe_allow_html=True)
+    st.markdown("<div class='panel-title'>🔥 Detection Heatmap</div>",unsafe_allow_html=True)
+    heat_cut=now-timedelta(hours=HEATMAP_LOOKBACK_HR)
+    df_heat=df[df["timestamp"]>=heat_cut]
+    if df_heat.empty:
+        st.caption("No recent detections for heatmap.")
     else:
-        st.markdown(f"<div style='font-weight:900;font-size:16px;color:#0f172a;'>Detection ID</div><div class='small-muted'>{st.session_state.selected_det}</div>",unsafe_allow_html=True)
-        st.markdown("<div class='hr'></div>",unsafe_allow_html=True)
-        st.markdown(f"<div style='font-weight:900;font-size:16px;color:#0f172a;'>Status</div><div style='margin-top:6px;'>{badge(st.session_state.selected_stat,st.session_state.selected_stat)}</div>",unsafe_allow_html=True)
-        st.markdown("<div class='hr'></div>",unsafe_allow_html=True)
-        st.markdown(f"<div style='font-weight:900;font-size:16px;color:#0f172a;'>Recommended Action</div>",unsafe_allow_html=True)
-        sev=st.session_state.selected_sev
-        if sev=="CRITICAL":
-            st.markdown("<div class='small-muted'>Dispatch municipal team immediately, prioritize public safety zones (schools/parks), and initiate capture/relocation protocol.</div>",unsafe_allow_html=True)
-        elif sev=="HIGH":
-            st.markdown("<div class='small-muted'>Acknowledge within 10 minutes and dispatch team to monitor/redirect pack movement near crowded areas.</div>",unsafe_allow_html=True)
-        elif sev=="MEDIUM":
-            st.markdown("<div class='small-muted'>Acknowledge and schedule patrol. Log recurring hotspots for targeted mitigation.</div>",unsafe_allow_html=True)
-        else:
-            st.markdown("<div class='small-muted'>Log event and monitor. Escalate if repeated detections occur within 30 minutes.</div>",unsafe_allow_html=True)
-        st.markdown("<div class='hr'></div>",unsafe_allow_html=True)
-        note=st.text_area("Operator Notes",value=st.session_state.get("op_note",""),height=140)
-        st.session_state.op_note=note
-        if st.button("Save Notes",use_container_width=True):
-            st.toast("Notes saved")
+        render_heatmap(df_heat.tail(200))
+        st.caption("Higher intensity indicates higher detection density (approx.).")
     st.markdown("</div>",unsafe_allow_html=True)
+    st.markdown('<div class="panel" style="margin-top:12px;">',unsafe_allow_html=True)
+    st.markdown("<div class='panel-title'>🧾 Recent Alerts</div>",unsafe_allow_html=True)
+    alerts=df_recent_alerts[df_recent_alerts["severity"].isin(["MED","HIGH"])].sort_values("timestamp",ascending=False).head(8)
+    if alerts.empty:
+        st.caption("No recent MED/HIGH alerts detected.")
+    else:
+        for _,r in alerts.iterrows():
+            t=r["timestamp"]
+            t_str=t.strftime("%H:%M:%S") if isinstance(t,pd.Timestamp) else str(t)
+            sev=r.get("severity","LOW")
+            cam=r.get("camera_id","")
+            loc=r.get("location","")
+            cnt=int(r.get("dog_count",1))
+            title="Pack Detected" if cnt>=2 else "Single Detection"
+            st.markdown(f"<div class='alert-item'><div class='alert-time'>{t_str}</div><div class='alert-title'>{title} {badge_html(sev)}</div><div class='alert-meta'><b>Location:</b> {loc}<br><b>Camera:</b> {cam}<br><b>Count:</b> {cnt} dog(s)</div></div>",unsafe_allow_html=True)
+    st.markdown("</div>",unsafe_allow_html=True)
+st.markdown('<div class="panel" style="margin-top:12px;">',unsafe_allow_html=True)
+st.markdown("<div class='panel-title'>📄 Event Log</div>",unsafe_allow_html=True)
+show_cols=[c for c in ["timestamp","camera_id","location","class","confidence","dog_count","event_rate","severity","risk_score","image_url"] if c in filtered.columns]
+st.dataframe(filtered[show_cols].tail(50).reset_index(drop=True),use_container_width=True)
+st.markdown("</div>",unsafe_allow_html=True)
+st.markdown(f"<div class='footer'>Status: Dashboard checks Google Sheets for new data every {int(REFRESH_MS/1000)} seconds.</div>",unsafe_allow_html=True)
