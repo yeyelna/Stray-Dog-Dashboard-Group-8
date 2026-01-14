@@ -156,7 +156,7 @@ yday_start = pd.Timestamp(datetime.combine(yday_date, time(0, 0)), tz="Asia/Kual
 yday_end = today_start
 
 last_seen = df["timestamp"].max() if len(df) else pd.NaT
-system_active = False if pd.isna(last_seen) else (pd.Timestamp(now, tz=TZ) - last_seen) <= pd.Timedelta(seconds=ACTIVE_SEC)
+system_active = False if pd.isna(last_seen) else (pd.Timestamp(now) - last_seen) <= pd.Timedelta(seconds=ACTIVE_SEC)
 
 df_live = df[df["timestamp"] >= live_start]
 df_today = df[(df["timestamp"] >= today_start) & (df["timestamp"] < today_start + pd.Timedelta(days=1))]
