@@ -63,8 +63,8 @@ html, body, [class*="css"] {{
 }}
 
 /* 4. Text & Headers */
-.stApp, .stApp * {{ color: #0f172a !important; }}
-.small-muted {{ color: #64748b !important; }}
+.stApp, .stApp * {{ color: #3b2303 !important; }}
+.small-muted {{ color: #99590f !important; }}
 
 /* 5. Header Title Area: WHITE BOX + SHADOW */
 .header-area {{
