@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: STRICT CARD SEPARATION
+# CSS: STRICT CARD SEPARATION + TABLE STYLING
 # =========================
 st.markdown(
     f"""
@@ -93,6 +93,29 @@ html, body, [class*="css"] {{
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); }}
+
+/* 8. CUSTOM HTML TABLE STYLING (For Light Mode Table) */
+table.custom-table {{
+    width: 100%;
+    border-collapse: collapse;
+    color: #0f172a;
+    font-size: 14px;
+}}
+table.custom-table th {{
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 800;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 2px solid #cbd5e1;
+}}
+table.custom-table td {{
+    padding: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}}
+table.custom-table tr:hover {{
+    background-color: #f8fafc;
+}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -386,13 +409,19 @@ with right:
                 st.info("Select an alert.")
             else:
                 cls, sev_txt, bg, col = severity_badge(sel[col_sev])
-                
-                st.markdown(f"""
-                <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:18px; font-weight:900;">{str(sel[col_id])}</span>
-                    <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
-                </div>
-                """, unsafe_allow_html=True)
+                ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
+                conf = sel[col_conf]
+                conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
+
+                st.markdown(
+                    f"""
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                      <div style="font-weight:900">{str(sel[col_id])}</div>
+                      <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
                 img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
                 if img_ok:
@@ -403,13 +432,13 @@ with right:
                 st.markdown("---")
                 st.markdown(f"**Loc:** {str(sel[col_loc])}")
                 st.markdown(f"**Cam:** {str(sel[col_cam])}")
-                st.markdown(f"**Time:** {sel['ts'].strftime('%d/%m %H:%M')}")
-                st.markdown(f"**Conf:** {sel.get(col_conf, 0)}%")
+                st.markdown(f"**Time:** {ts_txt}")
+                st.markdown(f"**Conf:** {conf_txt}")
 
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: TRENDS & ANALYTICS (FIXED COLORS)
+# ROW 3: TRENDS & ANALYTICS (FIXED COLORS: theme=None + Black Text)
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -425,18 +454,19 @@ with st.container(border=True):
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
         
-        # FORCE DARK TEXT
+        # FIXED: Forces black text and lines
         fig.update_layout(
-            template="plotly_white",
+            template="plotly_white", # Force white template (dark text)
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='black'), # <--- FORCE BLACK
-            xaxis=dict(showgrid=True, gridcolor='#e2e8f0'),
-            yaxis=dict(showgrid=True, gridcolor='#e2e8f0')
+            font=dict(color='#000000'), # BLACK TEXT
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
     elif mode == "7 Days":
         start = now - timedelta(days=7)
@@ -447,7 +477,7 @@ with st.container(border=True):
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
         
-        # FORCE DARK TEXT
+        # FIXED: Forces black text and lines
         fig.update_layout(
             template="plotly_white",
             barmode="group", 
@@ -455,11 +485,12 @@ with st.container(border=True):
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='black'), # <--- FORCE BLACK
-            xaxis=dict(showgrid=True, gridcolor='#e2e8f0'),
-            yaxis=dict(showgrid=True, gridcolor='#e2e8f0')
+            font=dict(color='#000000'), # BLACK TEXT
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
     else:
         start = now - timedelta(days=7)
@@ -468,24 +499,27 @@ with st.container(border=True):
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
         
-        # FORCE DARK TEXT
+        # FIXED: Forces black text
         fig.update_layout(
             template="plotly_white",
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='black') # <--- FORCE BLACK
+            font=dict(color='#000000'), # BLACK TEXT
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS (Separated Card)
+# ROW 4: RECENT EVENTS (CUSTOM HTML TABLE FOR LIGHT MODE)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
     st.caption("Last 50 records (scrollable)")
+    
+    # Logic to prepare table data
     recent = df_sorted.head(50).copy()
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
     show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
@@ -495,4 +529,9 @@ with st.container(border=True):
         recent[col_conf].round(0).astype(int).astype(str) + "%",
         "—"
     )
-    st.dataframe(show, use_container_width=True, height=380)
+    
+    # Convert to HTML with custom styling to force light mode
+    table_html = show.to_html(classes="custom-table", index=False, border=0)
+    
+    # Wrap in a scrollable div
+    st.markdown(f'<div style="height:380px; overflow-y:auto;">{table_html}</div>', unsafe_allow_html=True)
