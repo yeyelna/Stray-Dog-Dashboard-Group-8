@@ -44,15 +44,28 @@ small, .small-muted{color:#475569 !important}
 
 /* ===== REAL BOX STYLING for st.container(border=True) ===== */
 /* This wrapper exists when border=True */
+/* ===== REAL BOX STYLING (NO DOUBLE FRAME) ===== */
 [data-testid="stVerticalBlockBorderWrapper"]{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+
+/* Apply the card styling ONLY to the immediate child */
+[data-testid="stVerticalBlockBorderWrapper"] > div{
   background:#faf7f2 !important;
   border:1px solid rgba(30,41,59,.14) !important;
   border-radius:18px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
   padding:14px !important;
 }
-/* remove inner weird spacing */
-[data-testid="stVerticalBlockBorderWrapper"] > div{padding:0 !important}
+
+/* Kill any extra borders inside (Streamlit sometimes adds inner edges) */
+[data-testid="stVerticalBlockBorderWrapper"] > div *{
+  outline:none !important;
+}
+
 
 /* HEADER */
 .headerbar{
@@ -437,7 +450,7 @@ with left:
                     <div class="ov-pill ov-rec">● REC</div>
                     <div class="ov-cam">{cam}</div>
                   </div>
-                  <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} dogs</div>
+                  <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} stray dogs</div>
                 </div>
                 <div class="thumb-title">{loc}</div>
                 <div class="thumb-sub">{cam} • {ts_txt}</div>
@@ -475,7 +488,7 @@ def render_alert_list(data, tabname):
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
                 <div style="min-width:0">
                   <div style="font-weight:900">
-                    {int(r[col_dogs])} Dogs Detected
+                    {int(r[col_dogs])} Stray Dogs Detected
                     <span class="{sev_class}" style="margin-left:8px">{sev_txt}</span>
                   </div>
                   <div class="small-muted">{str(r[col_camtype])} • {str(r[col_cam])}</div>
@@ -542,8 +555,7 @@ with right:
 
             st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
             st.markdown(f"- **Location:** {str(sel[col_loc])}")
-            st.markdown(f"- **Dogs:** {int(sel[col_dogs])}")
-            st.markdown(f"- **Breed:** {str(sel[col_breed])}")
+            st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
             st.markdown(f"- **Confidence:** {conf_txt}")
             st.markdown(f"- **Status:** {str(sel[col_status])}")
 
@@ -619,9 +631,14 @@ with st.container(border=True):
     st.caption("Last 50 records (scrollable)")
     recent = df_sorted.head(50).copy()
 
-    show = recent[[col_id, col_loc, col_cam, col_dogs, col_breed, col_conf, col_sev, col_status]].copy()
-    show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
-    show.columns = ["Timestamp","Detection ID","Location","Camera","Dogs","Breed","Confidence","Severity","Status"]
-    show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str)+"%", "—")
+    show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
+show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
 
+show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
+
+show["Confidence"] = np.where(
+    pd.notna(recent[col_conf]),
+    recent[col_conf].round(0).astype(int).astype(str) + "%",
+    "—"
+)
     st.dataframe(show, use_container_width=True, height=380)
