@@ -25,34 +25,35 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Adjusted for VISIBLE BORDERS)
+# CSS (HIGH CONTRAST BORDERS)
 # =========================
 st.markdown(
     f"""
 <style>
+/* 1. Background Color */
 html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
-.stApp{{background:#f7f4ef}}
+.stApp{{background:#f7f4ef !important}}
 .block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 
-/* Text Colors */
+/* 2. Text Colors */
 .stApp, .stApp *{{color:#0f172a !important}}
 [data-testid="stCaptionContainer"] *{{color:#64748b !important}}
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== OUTER CARD STYLE (Visible Border) ====== */
-/* This targets the Main Cards (border=True) */
+/* 3. CARD STYLE (The Visible Border) */
+/* I have made the border 2px solid and DARK GREY so it is clearly visible */
 [data-testid="stVerticalBlockBorderWrapper"]{{
-  background-color: #ffffff !important; /* White Card to pop against beige bg */
-  border: 1.5px solid #475569 !important; /* Darker Border for visibility */
+  background-color: #ffffff !important;
+  border: 2px solid #334155 !important; /* <--- DARK VISIBLE BORDER */
   border-radius: 16px !important;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
   padding: 16px !important;
   margin-bottom: 1rem !important;
 }}
 
-/* ====== REMOVE DOUBLE BORDER ====== */
-/* If a border wrapper is inside another border wrapper (like the scroll box), remove the inner border */
+/* 4. REMOVE INNER BORDER */
+/* Prevents double borders inside the scrolling areas */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
@@ -63,7 +64,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 /* Header Bar */
 .headerbar{{
   background:#ffffff;
-  border: 1.5px solid #475569; /* Match card border */
+  border: 2px solid #334155; /* Match card border */
   border-radius:16px;
   box-shadow:0 4px 6px rgba(0,0,0,0.05);
   padding:14px 16px;
@@ -101,7 +102,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .badge-time{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.12) !important}}
 
 /* Thumbnails */
-.thumb{{border-radius:16px;overflow:hidden;border:1px solid rgba(30,41,59,.16);background:#ffffff;position:relative}}
+.thumb{{border-radius:16px;overflow:hidden;border:1px solid #334155;background:#ffffff;position:relative}}
 .thumb img{{display:block;width:100%;height:220px;object-fit:cover}}
 .overlay{{position:absolute;left:10px;top:10px;display:flex;gap:8px}}
 .ov-pill{{background:#16a34a;color:#ffffff !important;font-weight:900;font-size:12px;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}}
@@ -306,9 +307,9 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (Separated)
+# ROW 1: KPI (Gap + Border)
 # =========================
-# Added gap="medium" to separate the cards
+# Uses gap="medium" to separate cards
 k1, k2, k3 = st.columns(3, gap="medium")
 
 with k1:
@@ -333,19 +334,17 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: MAIN FEATURES (Separated)
+# ROW 2: MAIN FEATURES (Gap + Border)
 # =========================
-# Added gap="medium" to separate the cards
 left, mid, right = st.columns([1.05, 0.95, 1.05], gap="medium")
 
 # --- LEFT (Camera) ---
 with left:
-    # Outer Card with Border
     with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner content (fixed height to align with others, NO BORDER)
+        # Inner content (NO BORDER to avoid double line)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
@@ -390,12 +389,11 @@ with left:
 
 # --- MIDDLE (Alerts) ---
 with mid:
-    # Outer Card with Border
     with st.container(border=True):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner Scrollable Area (Header stays fixed above this)
+        # Inner scroll area (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
@@ -439,11 +437,10 @@ with mid:
 
 # --- RIGHT (Picture) ---
 with right:
-    # Outer Card with Border
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner content (fixed height for alignment, NO BORDER)
+        # Inner scroll area (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
