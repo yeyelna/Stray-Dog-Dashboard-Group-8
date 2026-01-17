@@ -427,12 +427,12 @@ with st.container(border=True):
         
         # FORCE DARK TEXT
         fig.update_layout(
-            template="plotly_white", # Force white template (dark text)
+            template="plotly_white",
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#0f172a'),
+            font=dict(color='black'), # <--- FORCE BLACK
             xaxis=dict(showgrid=True, gridcolor='#e2e8f0'),
             yaxis=dict(showgrid=True, gridcolor='#e2e8f0')
         )
@@ -455,7 +455,7 @@ with st.container(border=True):
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#0f172a'),
+            font=dict(color='black'), # <--- FORCE BLACK
             xaxis=dict(showgrid=True, gridcolor='#e2e8f0'),
             yaxis=dict(showgrid=True, gridcolor='#e2e8f0')
         )
@@ -474,7 +474,7 @@ with st.container(border=True):
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#0f172a')
+            font=dict(color='black') # <--- FORCE BLACK
         )
         st.plotly_chart(fig, use_container_width=True)
 
