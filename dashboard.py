@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: FLOATING CARDS WITH ENHANCED SHADOWS
+# CSS: CLEAN FLOATING PANELS (NO BORDERS)
 # =========================
 st.markdown(
     f"""
@@ -41,17 +41,17 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. CARD STYLE: STRONG SHADOWS, NO BORDERS */
+/* 2. CARD STYLE: NO BORDER, JUST SHADOW */
 /* Targets specific st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: none !important; /* No outline line */
+    border: none !important;  
     border-radius: 16px !important;
     
-    /* ENHANCED SHADOW for better depth */
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important; 
+    /* Soft shadow to lift cards */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
     
-    padding: 24px !important; /* Slightly more padding for breathing room */
+    padding: 20px !important;
     margin-bottom: 0px !important; 
 }}
 
@@ -83,20 +83,17 @@ html, body, [class*="css"] {{
     font-weight: 700;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    transition: all 0.2s ease-in-out;
 }}
 .stButton > button:hover {{
     background: #f8fafc !important;
     border-color: #cbd5e1 !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transform: translateY(-1px);
 }}
 
 /* 7. Thumbnails */
 .thumb {{
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Added shadow to thumbnails too */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 
@@ -263,14 +260,14 @@ st.markdown(
     f"""
     <div class="header-area">
         <div class="main-title">🐕 Smart City Stray Dog Control</div>
-        <div style="font-size:16px; color:#475569;">Real-Time AI Detection Monitoring</div>
+        <div style="font-size:16px; color:#475569; text-shadow: 1px 2px 3px rgba(0,0,0,0.2);">Real-Time AI Detection Monitoring</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS
+# ROW 1: 3 KPI CARDS (SEPARATED)
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
@@ -283,7 +280,7 @@ with k1:
             {delta_chip(pct_change(new_today, new_yday))}
         </div>
         <div style="font-size:42px; font-weight:900; margin-top:5px;">{new_today}</div>
-        <div style="font-weight:bold; color:#64748b; font-size:14px;">NEW ALERTS</div>
+        <div style="font-weight:bold; color:#64748b; font-size:14px; text-shadow: 1px 2px 3px rgba(0,0,0,0.2);">NEW ALERTS</div>
         """, unsafe_allow_html=True)
 
 # CARD 2
@@ -295,7 +292,7 @@ with k2:
             {delta_chip(pct_change(dogs_today, dogs_yday))}
         </div>
         <div style="font-size:42px; font-weight:900; margin-top:5px;">{dogs_today}</div>
-        <div style="font-weight:bold; color:#64748b; font-size:14px;">TOTAL STRAY DOGS DETECTED</div>
+        <div style="font-weight:bold; color:#64748b; font-size:14px; text-shadow: 1px 2px 3px rgba(0,0,0,0.2);">TOTAL STRAY DOGS DETECTED</div>
         """, unsafe_allow_html=True)
 
 # CARD 3
@@ -307,13 +304,13 @@ with k3:
             {delta_chip(pct_change(hp_today, hp_yday))}
         </div>
         <div style="font-size:42px; font-weight:900; margin-top:5px;">{hp_today}</div>
-        <div style="font-weight:bold; color:#64748b; font-size:14px;">HIGH PRIORITY</div>
+        <div style="font-weight:bold; color:#64748b; font-size:14px; text-shadow: 1px 2px 3px rgba(0,0,0,0.2);">HIGH PRIORITY</div>
         """, unsafe_allow_html=True)
 
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS
+# ROW 2: 3 FEATURE CARDS (SEPARATED)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
@@ -399,12 +396,15 @@ with right:
                 conf = sel[col_conf]
                 conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
 
-                st.markdown(f"""
-                <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:18px; font-weight:900;">{str(sel[col_id])}</span>
-                    <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(
+                    f"""
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                      <div style="font-weight:900">{str(sel[col_id])}</div>
+                      <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
                 img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
                 if img_ok:
@@ -421,7 +421,7 @@ with right:
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: TRENDS & ANALYTICS
+# ROW 3: TRENDS & ANALYTICS (FIXED COLORS: theme=None + Black Text)
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -437,18 +437,19 @@ with st.container(border=True):
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
         
+        # FIXED: Forces black text and lines
         fig.update_layout(
-            template="plotly_white", 
+            template="plotly_white", # Force white template (dark text)
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#000000'), 
-            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), 
-            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), 
-            legend=dict(font=dict(color='#000000'))
+            font=dict(color='#000000'), # BLACK TEXT
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
         )
-        st.plotly_chart(fig, use_container_width=True, theme=None)
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
     elif mode == "7 Days":
         start = now - timedelta(days=7)
@@ -459,6 +460,7 @@ with st.container(border=True):
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
         
+        # FIXED: Forces black text and lines
         fig.update_layout(
             template="plotly_white",
             barmode="group", 
@@ -466,12 +468,12 @@ with st.container(border=True):
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#000000'), 
-            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), 
-            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), 
-            legend=dict(font=dict(color='#000000'))
+            font=dict(color='#000000'), # BLACK TEXT
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
         )
-        st.plotly_chart(fig, use_container_width=True, theme=None)
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
     else:
         start = now - timedelta(days=7)
@@ -480,20 +482,21 @@ with st.container(border=True):
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
         
+        # FIXED: Forces black text
         fig.update_layout(
             template="plotly_white",
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#000000'), 
-            legend=dict(font=dict(color='#000000'))
+            font=dict(color='#000000'), # BLACK TEXT
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
         )
-        st.plotly_chart(fig, use_container_width=True, theme=None)
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS
+# ROW 4: RECENT EVENTS (STYLED NATIVE DATAFRAME)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -509,6 +512,8 @@ with st.container(border=True):
         "—"
     )
     
+    # === PANDAS STYLING FOR FORCED LIGHT MODE ===
+    # This keeps interactivity but forces White Background / Black Text
     def highlight_sev(val):
         color = 'black'
         return f'color: {color}'
@@ -518,6 +523,11 @@ with st.container(border=True):
         'color': '#000000',            
         'border-color': '#e2e8f0'      
     }).map(highlight_sev, subset=['Severity'])
+
+    # Force header styling
+    styled_df.set_table_styles([
+        {'selector': 'th', 'props': [('background-color', '#f1f5f9'), ('color', '#0f172a'), ('font-weight', 'bold'), ('border-bottom', '2px solid #cbd5e1')]}
+    ])
 
     st.dataframe(
         styled_df, 
