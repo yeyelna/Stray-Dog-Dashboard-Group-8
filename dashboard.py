@@ -18,13 +18,12 @@ REFRESH_SEC = 8
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
-# Fixed scroll height INSIDE Active Alerts card
 ALERTS_SCROLL_HEIGHT_PX = 520
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (ONE clean border per Streamlit border card, darker borders, no phantom boxes)
+# CSS (ONE card per feature + darker KPI text + Row1/Row2 inner borders removed)
 # =========================
 st.markdown(
     """
@@ -33,30 +32,24 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .stApp{background:#f7f4ef}
 .block-container{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}
 
-/* readable text */
+/* Text: readable (dark) */
 .stApp, .stApp *{color:#0f172a !important}
 [data-testid="stCaptionContainer"] *{color:#475569 !important}
 .small-muted, small{color:#475569 !important}
 *{overflow-wrap:anywhere;word-break:break-word}
 
-/* GAP */
 .row-gap{height:18px}
 
-/* ========= THE IMPORTANT PART =========
-   Style ONLY the Streamlit border wrapper as the card.
-   Remove any "extra" internal frames.
-*/
+/* Outer border for Streamlit border cards (this is the ONE border you want) */
 [data-testid="stVerticalBlockBorderWrapper"]{
   background:#faf7f2 !important;
-  border:1.4px solid rgba(15,23,42,.28) !important; /* darker visible border */
+  border:1.4px solid rgba(15,23,42,.28) !important;
   border-radius:18px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
   padding:14px !important;
   margin:0 !important;
-  overflow:hidden !important; /* keep images inside */
+  overflow:hidden !important;
 }
-
-/* kill any nested border/padding that makes redundant look */
 [data-testid="stVerticalBlockBorderWrapper"] > div{
   background:transparent !important;
   border:none !important;
@@ -102,8 +95,14 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .badge-crit{background:#ffe4e6 !important;color:#9f1239 !important}
 .badge-time{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(15,23,42,.10) !important}
 
-/* Thumbnail */
-.thumb{border-radius:16px;overflow:hidden;border:1px solid rgba(15,23,42,.16);background:#ffffff;position:relative}
+/* ========= ROW 2: remove INNER borders (only outer feature border remains) ========= */
+.thumb{
+  border:none !important;          /* removed inner border */
+  border-radius:16px;
+  overflow:hidden;
+  background:transparent !important; /* no extra boxed look */
+  position:relative
+}
 .thumb img{display:block;width:100%;height:220px;object-fit:cover}
 .overlay{position:absolute;left:10px;top:10px;display:flex;gap:8px}
 .ov-pill{
@@ -365,6 +364,7 @@ st.markdown(
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="pill pill-green">📈 <span>System Active</span></div>
       <div class="pill pill-red">🔔 <span>{new_today} New Alerts</span></div>
     </div>
   </div>
@@ -374,7 +374,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (real bordered cards)
+# ROW 1: KPI (ONLY outer border from st.container)
 # =========================
 k1, k2, k3 = st.columns(3)
 
@@ -423,7 +423,7 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: Camera + Active Alerts (scroll inside) + Picture
+# ROW 2: Camera + Active Alerts + Picture (ONLY outer border on each feature)
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
@@ -495,9 +495,10 @@ def render_alert_list(data):
             dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
             ago_txt = time_ago(r["ts"], now)
 
+            # INNER BORDER REMOVED HERE (only outer feature card has border)
             st.markdown(
                 f"""
-                <div style="padding:12px;border-radius:16px;border:1px solid rgba(15,23,42,.16);background:#ffffff;margin-bottom:10px">
+                <div style="padding:12px;border-radius:16px;background:#ffffff;margin-bottom:10px">
                   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
                     <div style="min-width:0">
                       <div style="font-weight:900">
@@ -572,7 +573,7 @@ with right:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: Trends (no cut off stats)
+# ROW 3: Trends (UNCHANGED)
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -646,7 +647,7 @@ with st.container(border=True):
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: Recent Events (scrollable)
+# ROW 4: Recent Events (UNCHANGED)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
