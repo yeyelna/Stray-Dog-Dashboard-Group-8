@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from dateutil import parser
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
+import contextlib
 
 # =========================
 # CONFIG
@@ -20,10 +21,13 @@ SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 SHOW_SINGLE_CAMERA_FEED = True
 
+# Make Active Alerts scroll INSIDE a fixed height (smaller than before)
+ACTIVE_ALERTS_SCROLL_H = 450  # <- decrease this to match left/right perceived height
+
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (FIX redundancy + keep everything INSIDE boxes)
+# CSS (remove redundant nested boxes + keep content INSIDE)
 # =========================
 st.markdown(
     """
@@ -41,24 +45,32 @@ small, .small-muted{color:#475569 !important}
 /* Spacing */
 .row-gap{height:18px}
 
-/* ===== SINGLE BOX ONLY (NO redundant nested frame) =====
-   Streamlit's border=True wrapper is stVerticalBlockBorderWrapper.
-   We style THAT element as the card, and kill inner frames. */
+/* ===== OUTER CARD ONLY ===== */
 [data-testid="stVerticalBlockBorderWrapper"]{
   background:#faf7f2 !important;
   border:1px solid rgba(30,41,59,.14) !important;
   border-radius:18px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
   padding:14px !important;
-  overflow:hidden !important; /* images/plots stay INSIDE */
+  overflow:hidden !important;     /* keep images/plots INSIDE */
   margin:0 !important;
 }
+
+/* Remove any inner frame/padding that causes "double box" */
 [data-testid="stVerticalBlockBorderWrapper"] > div{
   background:transparent !important;
   border:none !important;
   box-shadow:none !important;
   padding:0 !important;
   margin:0 !important;
+}
+
+/* If any nested border wrappers appear, kill them */
+[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
 }
 
 /* HEADER */
@@ -76,10 +88,8 @@ small, .small-muted{color:#475569 !important}
   border:1px solid rgba(30,41,59,.12);
   background:#ffffff;font-weight:900
 }
-.pill-green{background:#ecfdf5 !important;border-color:#bbf7d0 !important;color:#166534 !important}
-.pill-green *{color:#166534 !important}
-.pill-yellow{background:#fffbeb !important;border-color:#fde68a !important;color:#92400e !important}
-.pill-yellow *{color:#92400e !important}
+.pill-red{background:#ffe4e6 !important;border-color:#fecdd3 !important;color:#9f1239 !important}
+.pill-red *{color:#9f1239 !important}
 
 /* KPI */
 .kpi-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}
@@ -119,7 +129,7 @@ small, .small-muted{color:#475569 !important}
 .thumb-title{font-weight:900;margin-top:10px}
 .thumb-sub{margin-top:-2px;color:#475569 !important}
 
-/* Buttons (no black bars) */
+/* Buttons */
 .stButton > button{
   width:100%;
   background:#ffffff !important;
@@ -154,7 +164,6 @@ def parse_ts(x):
     if s == "":
         return pd.NaT
 
-    # dd/mm/yyyy HH:MM
     try:
         if "/" in s and ":" in s and "t" not in s.lower():
             dt = datetime.strptime(s, "%d/%m/%Y %H:%M")
@@ -162,7 +171,6 @@ def parse_ts(x):
     except:
         pass
 
-    # ISO
     try:
         dt = parser.isoparse(s)
         if dt.tzinfo is None:
@@ -254,6 +262,21 @@ def load_data(url):
     return _clean_cols(df)
 
 
+@contextlib.contextmanager
+def scroll_container(height_px: int):
+    """
+    Streamlit versions differ:
+    - Newer: st.container(height=..., border=False)
+    - Older: st.container(height=...) only
+    """
+    try:
+        with st.container(height=height_px, border=False):
+            yield
+    except TypeError:
+        with st.container(height=height_px):
+            yield
+
+
 # =========================
 # LOAD + STANDARDIZE
 # =========================
@@ -270,7 +293,8 @@ col_camtype = pick_col(raw, ["camera_type", "type"])
 col_dogs = pick_col(raw, ["dogs", "dog_count", "num_dogs", "count"])
 col_conf = pick_col(raw, ["confidence", "conf", "score"])
 col_sev = pick_col(raw, ["severity", "priority", "level"])
-col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional, used for table only
+col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional (table only)
+
 img_candidates = [c for c in raw.columns if ("url" in c or "image" in c or "snapshot" in c or "photo" in c)]
 col_img = pick_col(raw, ["snapshot_url", "image_url", "img_url", "photo_url", "snapshot", "image", "url"]) or (
     img_candidates[0] if len(img_candidates) > 0 else None
@@ -312,7 +336,9 @@ df[col_conf] = normalize_confidence(df[col_conf])
 
 if col_sev is None:
     dnum = df[col_dogs].astype(int)
-    df["severity"] = np.where(dnum >= 4, "CRITICAL", np.where(dnum >= 3, "HIGH", np.where(dnum >= 2, "MEDIUM", "LOW")))
+    df["severity"] = np.where(
+        dnum >= 4, "CRITICAL", np.where(dnum >= 3, "HIGH", np.where(dnum >= 2, "MEDIUM", "LOW"))
+    )
     col_sev = "severity"
 
 # Force single camera/location naming everywhere
@@ -369,15 +395,14 @@ st.markdown(
 <div class="headerbar">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:12px;min-width:260px">
-      <div class="kpi-ico" style="background:#dbeafe;color:#1d4ed8">⚠️</div>
+      <div class="kpi-ico" style="background:#dbeafe;color:#1d4ed8">🐕</div>
       <div>
         <div class="title">Smart City Stray Dog Control System</div>
         <div class="subtitle">Real-Time AI Detection Monitoring</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="pill pill-green">📈 <span>System Active</span></div>
-      <div class="pill pill-yellow">🔔 <span>{new_today} New Alerts</span></div>
+      <div class="pill pill-red">🔔 <span>{new_today} New Alerts</span></div>
     </div>
   </div>
 </div>
@@ -436,6 +461,7 @@ st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 2: Camera + Alerts + Picture
+# (Active Alerts is capped + scrolls INSIDE the fixed height)
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
@@ -457,7 +483,6 @@ with left:
             loc = str(r[col_loc])
 
             img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
-
             if img_ok:
                 st.markdown(
                     f"""
@@ -490,14 +515,15 @@ with left:
             if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
                 st.session_state.selected_alert_uid = uid
 
+
 def render_alert_list(data):
-    # single list only (no NEW/ACK/DISPATCHED tabs)
-    with st.container(height=520):
+    # NO extra inner "box": border=False + fixed height + scroll inside
+    with scroll_container(ACTIVE_ALERTS_SCROLL_H):
         if len(data) == 0:
             st.info("No alerts.")
             return
 
-        lim = min(len(data), 80)
+        lim = min(len(data), 120)
         for i in range(lim):
             r = data.iloc[i]
             uid = row_uid(r)
@@ -511,7 +537,7 @@ def render_alert_list(data):
 
             st.markdown(
                 f"""
-            <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.12);background:#ffffff">
+            <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.12);background:#ffffff;margin-bottom:10px">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
                 <div style="min-width:0">
                   <div style="font-weight:900">
@@ -534,9 +560,11 @@ def render_alert_list(data):
             if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
                 st.session_state.selected_alert_uid = uid
 
+
 with mid:
     with st.container(border=True):
         st.subheader("⛔ Active Alerts")
+        # This is the ONLY part that scrolls and is capped in height
         render_alert_list(df_sorted)
 
 with right:
@@ -660,14 +688,12 @@ with st.container(border=True):
     st.caption("Last 50 records (scrollable)")
     recent = df_sorted.head(50).copy()
 
-    # Since you only have 1 camera + 1 location, we remove Location/Camera columns.
-    # Keep Severity/Status (can be auto-derived if missing in sheet).
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
     show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
-
-    show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
+    show["Confidence"] = np.where(
+        pd.notna(recent[col_conf]),
+        recent[col_conf].round(0).astype(int).astype(str) + "%",
+        "—",
+    )
     st.dataframe(show, use_container_width=True, height=380)
-
-
-
