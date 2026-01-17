@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: INDIVIDUAL BOXES WITH COLOURED BORDER
+# CSS: INDIVIDUAL BOXES FOR EVERY CARD
 # =========================
 st.markdown(
     f"""
@@ -42,16 +42,16 @@ html, body, [class*="css"] {{
 }}
 
 /* 2. CARD STYLE: INDIVIDUAL BOXES */
-/* Targets every st.container(border=True) */
+/* Targets every st.container(border=True) individually */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
     
-    /* THE INDIVIDUAL BOX BORDER (Matches your line color) */
+    /* THE INDIVIDUAL BOX BORDER (Brown #9e5908) */
     border: 1px solid #9e5908 !important; 
     
     border-radius: 12px !important;
     
-    /* STRONG SHADOW */
+    /* Strong Shadow */
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
     
     padding: 20px !important;
@@ -59,7 +59,6 @@ html, body, [class*="css"] {{
 }}
 
 /* 3. CLEAN UP INNER CONTENT */
-/* Prevents double borders inside the scrollable areas */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -287,7 +286,7 @@ k1, k2, k3 = st.columns(3, gap="large")
 
 # CARD 1
 with k1:
-    with st.container(border=True): # Individual Box 1
+    with st.container(border=True): # <--- BOX 1
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">⛔</div>
@@ -299,7 +298,7 @@ with k1:
 
 # CARD 2
 with k2:
-    with st.container(border=True): # Individual Box 2
+    with st.container(border=True): # <--- BOX 2
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">📊</div>
@@ -311,7 +310,7 @@ with k2:
 
 # CARD 3
 with k3:
-    with st.container(border=True): # Individual Box 3
+    with st.container(border=True): # <--- BOX 3
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">🚨</div>
@@ -334,7 +333,7 @@ left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4 ---
 with left:
-    with st.container(border=True): # Individual Box 4
+    with st.container(border=True): # <--- BOX 4
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -368,7 +367,7 @@ with left:
 
 # --- CARD 5 ---
 with mid:
-    with st.container(border=True): # Individual Box 5
+    with st.container(border=True): # <--- BOX 5
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -400,7 +399,7 @@ with mid:
 
 # --- CARD 6 ---
 with right:
-    with st.container(border=True): # Individual Box 6
+    with st.container(border=True): # <--- BOX 6
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
