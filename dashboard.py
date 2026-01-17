@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: UNIFIED BOX STYLING (HTML & STREAMLIT CONTAINERS)
+# CSS: UNIFIED BOX STYLING FOR ALL CARDS
 # =========================
 st.markdown(
     f"""
@@ -41,7 +41,7 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. MANUAL KPI CARD STYLE (For Row 1 - HTML) */
+/* 2. MANUAL KPI CARD STYLE (Row 1 HTML Boxes) */
 .kpi-card {{
     background-color: #ffffff;
     border: 1px solid #9e5908; /* Brown Border */
@@ -54,11 +54,11 @@ html, body, [class*="css"] {{
     margin-bottom: 0px; 
 }}
 
-/* 3. ROW 2 & 4 CARD STYLE (For Streamlit Containers) */
-/* This ensures Row 2 looks EXACTLY like Row 1 */
+/* 3. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
+/* INI UNTUK PASTIKAN ROW 2 ADA KOTAK SAMA MACAM KPI */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; /* Matches KPI Card Border */
+    border: 1px solid #9e5908 !important; /* Brown Border - SAMA MACAM ATAS */
     border-radius: 12px !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
     padding: 20px !important;
@@ -66,7 +66,6 @@ html, body, [class*="css"] {{
 }}
 
 /* 4. CLEAN UP INNER CONTENT */
-/* Prevents double borders if containers are nested */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -328,7 +327,6 @@ with k3:
     </div>
     """, unsafe_allow_html=True)
 
-# SPACE ONLY - LINE REMOVED
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
@@ -338,7 +336,7 @@ left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4 ---
 with left:
-    with st.container(border=True):
+    with st.container(border=True): # <--- This container gets the BROWN BORDER style
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -372,7 +370,7 @@ with left:
 
 # --- CARD 5 ---
 with mid:
-    with st.container(border=True):
+    with st.container(border=True): # <--- This container gets the BROWN BORDER style
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -404,7 +402,7 @@ with mid:
 
 # --- CARD 6 ---
 with right:
-    with st.container(border=True):
+    with st.container(border=True): # <--- This container gets the BROWN BORDER style
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
