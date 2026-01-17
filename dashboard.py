@@ -449,7 +449,7 @@ with c3:
 # SEPARATOR LINE UNDER ROW 2
 # =========================
 st.markdown(
-    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
+    """<hr style="height:1px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
     unsafe_allow_html=True
 )
 
