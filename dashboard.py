@@ -25,12 +25,11 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Targeting Individual Cards with Visible Borders)
+# CSS (Adjusted for Visible Borders + White Cards)
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
 html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
 .stApp{{background:#f7f4ef}}
 .block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
@@ -41,19 +40,19 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== 2. INDIVIDUAL CARD BORDER ====== */
-/* This targets ONLY the st.container(border=True) wrappers */
+/* ====== OUTER CARD STYLE ====== */
+/* This targets the Main Cards (border=True) */
 [data-testid="stVerticalBlockBorderWrapper"]{{
-  background-color: #ffffff !important;
-  border: 2px solid #94a3b8 !important; /* VISIBLE GREY BORDER (2px) */
-  border-radius: 12px !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+  background-color: #ffffff !important; /* White Background */
+  border: 2px solid #475569 !important; /* DARK VISIBLE BORDER */
+  border-radius: 16px !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
   padding: 16px !important;
-  margin-bottom: 16px !important; /* Space below each card */
+  margin-bottom: 1rem !important;
 }}
 
-/* ====== 3. REMOVE INNER BORDER ====== */
-/* If a border wrapper (scroll area) is INSIDE another border wrapper (card), remove its border */
+/* ====== REMOVE INNER BORDER ====== */
+/* Fixes "Double Border" issue in scrollable areas */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
@@ -64,11 +63,11 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 /* Header Bar */
 .headerbar{{
   background:#ffffff;
-  border: 2px solid #94a3b8; /* Match Card Border */
-  border-radius:12px;
+  border: 2px solid #475569; /* Match card border */
+  border-radius:16px;
   box-shadow:0 4px 6px rgba(0,0,0,0.05);
   padding:14px 16px;
-  margin-bottom:20px;
+  margin-bottom:12px
 }}
 .title{{font-size:22px;font-weight:900;margin-bottom:2px}}
 .subtitle{{font-size:13px;color:#64748b !important;margin-top:-2px}}
@@ -307,10 +306,9 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (GAP + BORDER)
+# ROW 1: KPI (Using GAP for separation)
 # =========================
-# Added gap="medium" to create physical space between the cards
-k1, k2, k3 = st.columns(3, gap="medium") 
+k1, k2, k3 = st.columns(3, gap="medium") # ADDED GAP="MEDIUM"
 
 with k1:
     with st.container(border=True):
@@ -334,18 +332,17 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: MAIN CARDS (GAP + BORDER)
+# ROW 2: FIXED TITLE + SCROLLABLE CONTENT (Using GAP for separation)
 # =========================
-# Added gap="medium" to force separation
-left, mid, right = st.columns([1.05, 0.95, 1.05], gap="medium")
+left, mid, right = st.columns([1.05, 0.95, 1.05], gap="medium") # ADDED GAP="MEDIUM"
 
 # --- LEFT (Camera) ---
 with left:
-    with st.container(border=True):
+    with st.container(border=True): # Outer Card with Border
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner content (NO BORDER on the scroll area)
+        # Inner content (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
@@ -390,11 +387,11 @@ with left:
 
 # --- MIDDLE (Alerts) ---
 with mid:
-    with st.container(border=True):
+    with st.container(border=True): # Outer Card with Border
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner scroll area (NO BORDER)
+        # Inner Scrollable Area (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
@@ -438,10 +435,10 @@ with mid:
 
 # --- RIGHT (Picture) ---
 with right:
-    with st.container(border=True):
+    with st.container(border=True): # Outer Card with Border
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner scroll area (NO BORDER)
+        # Inner content (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
@@ -499,6 +496,7 @@ with st.container(border=True):
         fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
         fig.update_xaxes(dtick=1, tickmode="linear")
         st.plotly_chart(fig, use_container_width=True)
+
         peak = compute_peak_2hr(hourly.set_index("hour")["dogs"].to_dict())
         avg_daily = int(hourly["detections"].sum())
 
@@ -513,6 +511,7 @@ with st.container(border=True):
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
         fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=360)
         st.plotly_chart(fig, use_container_width=True)
+
         peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
         avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
 
@@ -521,9 +520,11 @@ with st.container(border=True):
         d = df_sorted[df_sorted["ts"] >= start].copy()
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
+
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.55)])
         fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
         st.plotly_chart(fig, use_container_width=True)
+
         peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
         d["day"] = d["ts"].dt.date
         daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
@@ -556,6 +557,7 @@ with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
     st.caption("Last 50 records (scrollable)")
     recent = df_sorted.head(50).copy()
+
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
     show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
@@ -564,6 +566,5 @@ with st.container(border=True):
         recent[col_conf].round(0).astype(int).astype(str) + "%",
         "—"
     )
+
     st.dataframe(show, use_container_width=True, height=380)
-
-
