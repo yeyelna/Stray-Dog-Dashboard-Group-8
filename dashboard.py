@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: CLEAN FLOATING PANELS (NO BORDERS)
+# CSS: FLOATING CARDS WITH ENHANCED SHADOWS
 # =========================
 st.markdown(
     f"""
@@ -41,17 +41,17 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. CARD STYLE: REMOVED THE "BOX" (Border) */
+/* 2. CARD STYLE: STRONG SHADOWS, NO BORDERS */
 /* Targets specific st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: #ffffff !important; /* Keep white bg for readability */
-    border: none !important;  /* <--- REMOVED THE BOX LINE */
+    background-color: #ffffff !important;
+    border: none !important; /* No outline line */
     border-radius: 16px !important;
     
-    /* Soft shadow only, to separate from background without a box line */
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+    /* ENHANCED SHADOW for better depth */
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important; 
     
-    padding: 20px !important;
+    padding: 24px !important; /* Slightly more padding for breathing room */
     margin-bottom: 0px !important; 
 }}
 
@@ -71,7 +71,6 @@ html, body, [class*="css"] {{
 .header-area {{
     margin-bottom: 30px;
     padding: 10px 0;
-    /* No border box here either */
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
@@ -84,18 +83,20 @@ html, body, [class*="css"] {{
     font-weight: 700;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: all 0.2s ease-in-out;
 }}
 .stButton > button:hover {{
     background: #f8fafc !important;
     border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
 }}
 
 /* 7. Thumbnails */
 .thumb {{
     border-radius: 12px;
     overflow: hidden;
-    /* No border here either, just image */
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Added shadow to thumbnails too */
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 
@@ -269,7 +270,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (CLEAN, NO BORDER BOX)
+# ROW 1: 3 KPI CARDS
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
@@ -312,7 +313,7 @@ with k3:
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (CLEAN, NO BORDER BOX)
+# ROW 2: 3 FEATURE CARDS
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
@@ -492,7 +493,7 @@ with st.container(border=True):
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS (STYLED NATIVE DATAFRAME)
+# ROW 4: RECENT EVENTS
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -508,7 +509,6 @@ with st.container(border=True):
         "—"
     )
     
-    # Force Pandas Styler to output black text on white bg
     def highlight_sev(val):
         color = 'black'
         return f'color: {color}'
