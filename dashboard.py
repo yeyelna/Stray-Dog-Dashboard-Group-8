@@ -23,66 +23,91 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: AGGRESSIVE LIGHT MODE FORCE
+# CSS: THE "NUCLEAR" LIGHT MODE FORCE
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. FORCE CSS VARIABLES TO LIGHT MODE */
-/* This overrides Streamlit's internal theme variables regardless of system settings */
+/* 1. FORCE STREAMLIT SYSTEM VARIABLES TO LIGHT MODE */
+/* Ini adalah bahagian paling penting. Ia menukar "DNA" warna Streamlit */
 :root {{
     --primary-color: #9e5908;
-    --background-color: #ffffff;
-    --secondary-background-color: #f0f2f6;
-    --text-color: #000000;
+    --background-color: #f7f4ef;
+    --secondary-background-color: #ffffff;
+    --text-color: #0d0700;
     --font: "Inter", sans-serif;
 }}
 
-/* 2. Global Background */
-html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
-.stApp {{ background-color: #f7f4ef !important; color: #000000 !important; }}
-.block-container {{ padding-top: 2rem; max-width: 1400px; }}
+/* 2. Global Background & Text */
+html, body, [class*="css"] {{
+    font-family: 'Inter', sans-serif;
+    background-color: #f7f4ef !important;
+    color: #0d0700 !important; /* Paksa teks hitam */
+}}
+.stApp {{
+    background-color: #f7f4ef !important;
+}}
+.block-container {{
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
+}}
 
-/* 3. DATAFRAME & TOOLBAR SPECIFIC FORCE */
-/* Force the Dataframe container to use light theme variables */
+/* 3. FIX FOR "ANALYTICS VIEW" RADIO BUTTONS & LABELS */
+/* Masalah dalam screenshot di mana tulisan hilang */
+[data-testid="stRadio"] label, [data-testid="stRadio"] p {{
+    color: #0d0700 !important;
+}}
+div[role="radiogroup"] label {{
+    color: #0d0700 !important;
+}}
+
+/* 4. DATAFRAME & TOOLBAR FORCE (The Table Fix) */
+/* Force Table Container White */
 [data-testid="stDataFrame"] {{
     background-color: #ffffff !important;
     border: 1px solid #e2e8f0;
 }}
-
-/* The Toolbar (Search/Download options) */
+/* Force Toolbar (Option Part) to Light */
 [data-testid="stElementToolbar"] {{
-    background-color: #f8fafc !important; /* Light Grey BG */
-    color: #000000 !important; /* Dark Text */
+    background-color: #ffffff !important;
+    color: #000000 !important;
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
 }}
 [data-testid="stElementToolbar"] button {{
     color: #000000 !important;
-    font-weight: 900 !important; /* Bold */
 }}
 [data-testid="stElementToolbar"] svg {{
-    fill: #000000 !important; /* Icons Black */
+    fill: #000000 !important;
     stroke: #000000 !important;
 }}
 [data-testid="stElementToolbar"]:hover {{
-    background-color: #e2e8f0 !important;
+    background-color: #f1f5f9 !important;
 }}
 
-/* Force Headers within the table to be Light */
+/* Force Headers */
 [data-testid="stDataFrame"] th {{
     background-color: #f8fafc !important;
     color: #000000 !important;
-    font-weight: 900 !important;
     border-bottom: 2px solid #9e5908 !important;
 }}
+/* Force Cells */
 [data-testid="stDataFrame"] td {{
     background-color: #ffffff !important;
     color: #000000 !important;
     border-bottom: 1px solid #e2e8f0 !important;
 }}
 
-/* 4. CARDS STYLING (Row 1 & Row 2) */
+/* 5. GENERAL COMPONENT TEXT FORCE */
+h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
+    color: #0f172a !important; 
+}}
+/* Exception: Text inside Badges/Buttons must remain white */
+.thumb span, .sev-badge {{
+    color: #ffffff !important;
+}}
+
+/* 6. CARDS STYLING */
 .kpi-card, [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
     border: 1px solid #9e5908 !important;
@@ -91,8 +116,7 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
     padding: 20px !important;
     margin-bottom: 0px !important;
 }}
-
-/* Clean up inner spacing for containers */
+/* Inner clean up */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -100,7 +124,7 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
     padding: 0 !important;
 }}
 
-/* 5. Header Title Area */
+/* 7. Header Area */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
@@ -108,7 +132,7 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
 }}
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
-/* 6. Buttons */
+/* 8. Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
     background: #ffffff !important; color: #0f172a !important;
@@ -116,16 +140,16 @@ html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 7. Vertical Line Separator */
+/* 9. Vertical Line */
 .vertical-line {{
     border-left: 2px solid #9e5908;
     height: 500px; margin: auto;
 }}
 
-/* 8. Thumbnails */
+/* 10. Thumbnails */
 .thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
-.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; color: #ffffff !important; }}
+.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
 </style>
 """,
     unsafe_allow_html=True,
@@ -350,7 +374,7 @@ c1, sep1, c2, sep2, c3 = st.columns([1, 0.05, 1, 0.05, 1])
 
 # --- CARD 4: CAMERA ---
 with c1:
-    with st.container(border=True): # Kotak 1
+    with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -385,7 +409,7 @@ with sep1:
 
 # --- CARD 5: ALERTS ---
 with c2:
-    with st.container(border=True): # Kotak 2
+    with st.container(border=True):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -421,7 +445,7 @@ with sep2:
 
 # --- CARD 6: PICTURE ---
 with c3:
-    with st.container(border=True): # Kotak 3
+    with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
@@ -526,7 +550,12 @@ with st.container(border=True):
         'background-color': '#ffffff', 
         'color': '#000000 !important', 
         'border-color': '#e2e8f0'
-    }).map(highlight_sev, subset=['Severity'])
+    }).map(highlight_sev, subset=['Severity']).set_table_styles([
+        # Headers: Grey Cair (#f8fafc) & Black Bold Text
+        {'selector': 'th', 'props': [('background-color', '#f8fafc'), ('color', '#000000 !important'), ('font-weight', '900'), ('border-bottom', '2px solid #9e5908')]},
+        # Rows: White BG & Black Text
+        {'selector': 'td', 'props': [('color', '#000000 !important'), ('background-color', '#ffffff !important')]}
+    ])
 
     # 2. Render Dataframe with hide_index=True
     st.dataframe(
