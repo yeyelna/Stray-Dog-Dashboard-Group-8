@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # =========================
 # CONFIG
 # =========================
-st.set_page_config(page_title="Smart City Stray Dog Control System", layout="wide")
+st.set_page_config(page_title="Smart City Stray Dog Control", layout="wide")
 TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
@@ -18,7 +18,7 @@ REFRESH_SEC = 8
 # Constants
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
-SCROLLABLE_AREA_HEIGHT = 420  
+SCROLL_AREA_HEIGHT = 420  
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
@@ -28,50 +28,43 @@ st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
-html, body, [class*="css"] {{
-    font-family: 'Inter', sans-serif;
-}}
+/* 1. FORCE BEIGE BACKGROUND FOR THE WHOLE APP */
 .stApp {{
-    background-color: #f7f4ef !important; /* Beige Background */
-}}
-.block-container {{
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1400px;
+    background-color: #f7f4ef !important;
 }}
 
-/* 2. THE CARD STYLE (Targets the 6 Features) */
-/* This targets specifically the st.container(border=True) elements */
+/* 2. CARD STYLE: Targets specific st.container(border=True) */
+/* This makes every card White with a THICK DARK GREY BORDER */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    
-    /* THE BORDER YOU WANT: Thick and Dark */
-    border: 2px solid #475569 !important; 
-    
+    border: 2px solid #475569 !important; /* Thick Slate Grey Border */
     border-radius: 12px !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     padding: 1rem !important;
-    margin-bottom: 0px !important; /* Let the column gap handle spacing */
+    margin-bottom: 0px !important; 
 }}
 
-/* 3. PREVENT INNER DOUBLING */
-/* If we have a scroll box inside a card, remove its border */
+/* 3. REMOVE DOUBLE BORDER FOR INTERNAL SCROLL AREAS */
+/* If a border container is inside another, make it invisible */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
+    background: transparent !important;
     padding: 0 !important;
 }}
 
-/* 4. Typography & Elements */
+/* 4. Text & Headers */
 .stApp, .stApp * {{ color: #0f172a !important; }}
 .small-muted {{ color: #64748b !important; }}
 
-/* 5. Header Title Area (No Border) */
+/* 5. Header Title Area (Clean, no box) */
 .header-area {{
     margin-bottom: 30px;
-    padding-left: 10px;
+    padding: 15px;
+    background: #ffffff;
     border-left: 6px solid #2563eb;
+    border-radius: 8px;
+    /* No border around the whole header, just a clean title block */
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
@@ -87,15 +80,13 @@ html, body, [class*="css"] {{
     background: #f1f5f9 !important;
 }}
 
-/* 7. Thumbnails */
+/* 7. Thumbnails & Badges */
 .thumb {{
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     overflow: hidden;
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
-
-/* 8. Badges */
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); }}
 .sev-low {{ background: #dbeafe; color: #1e40af !important; }}
 .sev-med {{ background: #fef3c7; color: #92400e !important; }}
@@ -251,7 +242,7 @@ dogs_today = int(today_df[col_dogs].sum())
 hp_today = int(today_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]).sum())
 
 # =========================
-# HEADER (NO BORDER, JUST TITLE)
+# HEADER (NO Border on this one, just text)
 # =========================
 st.markdown(
     f"""
@@ -264,14 +255,14 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: THE 3 KPI CARDS
+# ROW 1: THE 3 KPI CARDS (SEPARATED)
 # =========================
 # Using gap="large" ensures the cards don't touch
 k1, k2, k3 = st.columns(3, gap="large")
 
 # CARD 1: NEW ALERTS
 with k1:
-    with st.container(border=True): # <--- Explicit individual border
+    with st.container(border=True): # <--- SEPARATE BORDER HERE
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">⛔</div>
@@ -283,7 +274,7 @@ with k1:
 
 # CARD 2: TOTAL DOGS
 with k2:
-    with st.container(border=True): # <--- Explicit individual border
+    with st.container(border=True): # <--- SEPARATE BORDER HERE
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">📊</div>
@@ -295,7 +286,7 @@ with k2:
 
 # CARD 3: HIGH PRIORITY
 with k3:
-    with st.container(border=True): # <--- Explicit individual border
+    with st.container(border=True): # <--- SEPARATE BORDER HERE
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">🚨</div>
@@ -308,17 +299,17 @@ with k3:
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: THE 3 FEATURE CARDS
+# ROW 2: THE 3 FEATURE CARDS (SEPARATED)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4: CAMERA FEED ---
 with left:
-    with st.container(border=True): # <--- Explicit individual border
+    with st.container(border=True): # <--- SEPARATE BORDER HERE
         st.subheader("📷 Camera Feed")
         st.caption("Live monitoring")
         
-        # Inner scroll (No border)
+        # Internal scroll box (No Border)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No data.")
@@ -338,22 +329,22 @@ with left:
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown(f"<div style='margin-top:10px; font-weight:bold;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='small-muted'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
                 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                 
-                if st.button("Analyze Detection", key=f"sel_{uid}"):
+                if st.button("Select This Event", key=f"sel_{uid}"):
                     st.session_state.selected_alert_uid = uid
 
 # --- CARD 5: ACTIVE ALERTS ---
 with mid:
-    with st.container(border=True): # <--- Explicit individual border
+    with st.container(border=True): # <--- SEPARATE BORDER HERE
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
-        # Inner scroll (No border)
+        # Internal scroll box (No Border)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
@@ -380,13 +371,13 @@ with mid:
                     if st.button(f"View {str(r[col_id])}", key=f"btn_{uid}"):
                         st.session_state.selected_alert_uid = uid
 
-# --- CARD 6: EVENT DETAILS ---
+# --- CARD 6: EVENT PICTURE ---
 with right:
-    with st.container(border=True): # <--- Explicit individual border
-        st.subheader("🖼️ Event Details")
-        st.caption("Selected analysis")
+    with st.container(border=True): # <--- SEPARATE BORDER HERE
+        st.subheader("🖼️ Active Alert Picture")
+        st.caption("Details")
 
-        # Inner scroll (No border)
+        # Internal scroll box (No Border)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
@@ -405,7 +396,7 @@ with right:
                 if img_ok:
                     st.image(str(sel[col_img]), use_container_width=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown("---")
                 st.markdown(f"**Loc:** {str(sel[col_loc])}")
@@ -413,16 +404,16 @@ with right:
                 st.markdown(f"**Time:** {sel['ts'].strftime('%d/%m %H:%M')}")
                 st.markdown(f"**Conf:** {sel.get(col_conf, 0)}%")
 
-st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
+# =========================
+# BOTTOM ROWS (Also Bordered)
+# =========================
+st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
-# =========================
-# BOTTOM ROWS
-# =========================
-with st.container(border=True): # Separate Card
+with st.container(border=True):
     st.subheader("📈 Detection Trends")
     # (Simplified charts code for brevity, structure remains)
     st.info("Analytics charts display here...")
 
-with st.container(border=True): # Separate Card
+with st.container(border=True):
     st.subheader("🧾 Recent Events")
     st.dataframe(df_sorted.head(50)[col_id], use_container_width=True)
