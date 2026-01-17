@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: GUARANTEED BOX STYLING
+# CSS: UNIFIED BOX STYLING (HTML & STREAMLIT CONTAINERS)
 # =========================
 st.markdown(
     f"""
@@ -41,7 +41,7 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. MANUAL KPI CARD STYLE (The "Box" you asked for) */
+/* 2. MANUAL KPI CARD STYLE (For Row 1 - HTML) */
 .kpi-card {{
     background-color: #ffffff;
     border: 1px solid #9e5908; /* Brown Border */
@@ -51,13 +51,14 @@ html, body, [class*="css"] {{
     display: flex;
     flex-direction: column;
     height: 100%;
-    margin-bottom: 10px; /* Space below */
+    margin-bottom: 0px; 
 }}
 
-/* 3. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
+/* 3. ROW 2 & 4 CARD STYLE (For Streamlit Containers) */
+/* This ensures Row 2 looks EXACTLY like Row 1 */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; /* Brown Border */
+    border: 1px solid #9e5908 !important; /* Matches KPI Card Border */
     border-radius: 12px !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
     padding: 20px !important;
@@ -65,6 +66,7 @@ html, body, [class*="css"] {{
 }}
 
 /* 4. CLEAN UP INNER CONTENT */
+/* Prevents double borders if containers are nested */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -90,7 +92,7 @@ html, body, [class*="css"] {{
 /* 7. Buttons */
 .stButton > button {{
     width: 100%;
-    border: 1px solid #9e5908 !important;
+    border: 1px solid #9e5908 !important; /* Brown Border */
     background: #ffffff !important;
     color: #0f172a !important;
     font-weight: 700;
@@ -283,7 +285,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (MANUAL HTML BOXES)
+# ROW 1: 3 KPI CARDS (MANUAL BOXES)
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
@@ -326,14 +328,11 @@ with k3:
     </div>
     """, unsafe_allow_html=True)
 
-# === SEPARATOR LINE ===
-st.markdown(
-    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
-    unsafe_allow_html=True
-)
+# SPACE ONLY - LINE REMOVED
+st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (ST CONTAINERS)
+# ROW 2: 3 FEATURE CARDS (ST CONTAINERS - STYLED SAME AS KPI)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
