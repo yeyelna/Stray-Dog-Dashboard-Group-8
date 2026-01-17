@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: BOX SHADOWS (UNDER CARDS)
+# CSS
 # =========================
 st.markdown(
     f"""
@@ -318,7 +318,11 @@ with k3:
         <div style="font-weight:bold; color:#64748b; font-size:14px;">High Priority</div>
         """, unsafe_allow_html=True)
 
-st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
+# === SEPARATOR LINE ===
+st.markdown(
+    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
+    unsafe_allow_html=True
+)
 
 # =========================
 # ROW 2: 3 FEATURE CARDS (SHADOW BOXES)
@@ -484,5 +488,3 @@ with st.container(border=True):
         return 'color: black'
     styled_df = show.style.set_properties(**{'background-color': '#ffffff', 'color': '#000000', 'border-color': '#e2e8f0'}).map(highlight_sev, subset=['Severity'])
     st.dataframe(styled_df, use_container_width=True, height=380, column_config={"Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), "Detection ID": st.column_config.TextColumn("ID", width="small")})
-
-
