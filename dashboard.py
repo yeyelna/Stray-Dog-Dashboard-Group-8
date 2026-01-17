@@ -20,13 +20,14 @@ SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
 # ROW 2: HEIGHT CONFIG
-# We use an outer card (auto height) containing a fixed title + inner scrollable box
-SCROLLABLE_AREA_HEIGHT = 420  
+# This controls the height of the SCROLLABLE content area only.
+# The total card height will be this + the header height.
+SCROLLABLE_AREA_HEIGHT = 440  
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Double Border Removal + Styling)
+# CSS (Single Border + Scroll Fix)
 # =========================
 st.markdown(
     f"""
@@ -41,8 +42,8 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== OUTER CARD STYLE ====== */
-/* This targets the Main Cards (border=True) */
+/* ====== 1. OUTER CARD STYLE ====== */
+/* This targets the Main Card wrapper */
 [data-testid="stVerticalBlockBorderWrapper"]{{
   background:#faf7f2 !important;
   border:1.6px solid rgba(15,23,42,.35) !important;   
@@ -52,8 +53,9 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
   margin:0 !important;
 }}
 
-/* ====== REMOVE DOUBLE BORDER ====== */
-/* If a border wrapper is inside another border wrapper, remove the inner border */
+/* ====== 2. REMOVE INNER BORDER ====== */
+/* Crucial: If a border wrapper is inside another, make it invisible. 
+   This ensures the Scrollable Container (border=False) is truly borderless. */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
@@ -335,12 +337,12 @@ left, mid, right = st.columns([1.05, 0.95, 1.05])
 
 # --- LEFT (Camera) ---
 with left:
-    # Outer Card with Border
+    # Outer Card (Border visible)
     with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner content (fixed height to align with others, NO BORDER)
+        # Inner Content (Border HIDDEN, Scroll Enabled)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
@@ -385,12 +387,13 @@ with left:
 
 # --- MIDDLE (Alerts) ---
 with mid:
-    # Outer Card with Border
+    # Outer Card (Border visible)
     with st.container(border=True):
+        # Header stays fixed at top of card
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner Scrollable Area (Header stays fixed above this)
+        # Scrollable Area starts BELOW header (Border HIDDEN)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
@@ -434,11 +437,11 @@ with mid:
 
 # --- RIGHT (Picture) ---
 with right:
-    # Outer Card with Border
+    # Outer Card (Border visible)
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner content (fixed height for alignment, NO BORDER)
+        # Inner Content (Border HIDDEN, Scroll Enabled)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
