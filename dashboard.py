@@ -23,44 +23,38 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: UNIFIED BOX STYLING
+# CSS
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
-html, body, [class*="css"] {{
-    font-family: 'Inter', sans-serif;
-}}
-.stApp {{
-    background-color: #f7f4ef !important;
-}}
-.block-container {{
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1400px;
-}}
+/* Global Background */
+html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
+.stApp {{ background-color: #f7f4ef !important; }}
+.block-container {{ padding-top: 2rem; max-width: 1400px; }}
 
-/* 2. THE MASTER CARD STYLE */
-/* This style applies to BOTH the manual HTML cards (Row 1) AND the Streamlit containers (Row 2, 3, 4) */
-.kpi-card, [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; /* THE BROWN BORDER */
-    border-radius: 12px !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-    padding: 20px !important;
-    margin-bottom: 0px !important;
-}}
-
-/* Extra positioning for the HTML cards to behave like flex items */
+/* KPI CARDS (Row 1) - Manual HTML Box */
 .kpi-card {{
+    background-color: #ffffff;
+    border: 1px solid #9e5908;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 20px;
     display: flex;
     flex-direction: column;
     height: 100%;
 }}
 
-/* 3. CLEAN UP INNER CONTENT */
-/* Prevent double borders if containers are nested inside cards */
+/* ROW 2 CARDS (Streamlit Containers) */
+[data-testid="stVerticalBlockBorderWrapper"] {{
+    background-color: #ffffff !important;
+    border: 1px solid #9e5908 !important; /* Brown Border */
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+    padding: 20px !important;
+}}
+
+/* Inner clean up */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -68,49 +62,38 @@ html, body, [class*="css"] {{
     padding: 0 !important;
 }}
 
-/* 4. Text & Headers */
-.stApp, .stApp * {{ color: #0d0700 !important; }}
-.small-muted {{ color: #261603 !important; }}
-
-/* 5. Header Title Area */
+/* Header */
 .header-area {{
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #ffffff;
-    border-left: 6px solid #452603;
-    border-radius: 12px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px; padding: 20px; background-color: #ffffff;
+    border-left: 6px solid #452603; border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }}
-.main-title {{ font-size: 32px; font-weight: 900; }}
+.main-title {{ font-size: 32px; font-weight: 900; color: #0d0700; }}
 
-/* 6. Buttons */
+/* Buttons */
 .stButton > button {{
-    width: 100%;
-    border: 1px solid #9e5908 !important; /* Matches theme */
-    background: #ffffff !important;
-    color: #0f172a !important;
-    font-weight: 700;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    width: 100%; border: 1px solid #9e5908 !important;
+    background: #ffffff !important; color: #0f172a !important;
+    font-weight: 700; border-radius: 10px;
 }}
-.stButton > button:hover {{
-    background: #fdfae8 !important;
+.stButton > button:hover {{ background: #fdfae8 !important; }}
+
+/* Vertical Line Separator Style */
+.vertical-line {{
+    border-left: 2px solid #9e5908;
+    height: 500px; /* Adjust height to match cards */
+    margin: auto;
 }}
 
-/* 7. Thumbnails */
-.thumb {{
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border: 1px solid #e2e8f0;
-}}
+/* Thumbnails */
+.thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
+.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
 
-/* 8. Light Mode Table */
+/* Table */
 table.custom-table {{ width: 100%; border-collapse: collapse; color: #0f172a; font-size: 14px; }}
-table.custom-table th {{ background-color: #f1f5f9; color: #0f172a; font-weight: 800; text-align: left; padding: 10px; border-bottom: 2px solid #cbd5e1; }}
+table.custom-table th {{ background-color: #f1f5f9; color: #0f172a; padding: 10px; border-bottom: 2px solid #cbd5e1; }}
 table.custom-table td {{ padding: 10px; border-bottom: 1px solid #e2e8f0; }}
-table.custom-table tr:hover {{ background-color: #f8fafc; }}
 </style>
 """,
     unsafe_allow_html=True,
@@ -165,15 +148,6 @@ def severity_badge(sev):
 def pct_change(today_val, yday_val):
     if yday_val == 0: return 0.0 if today_val == 0 else 100.0
     return ((today_val - yday_val) / yday_val) * 100.0
-
-def compute_peak_2hr(hourly_dogs_dict):
-    arr = np.zeros(24)
-    for h in range(24): arr[h] = hourly_dogs_dict.get(h, 0)
-    best_h, best_sum = 0, -1
-    for h in range(24):
-        s = arr[h] + arr[(h + 1) % 24]
-        if s > best_sum: best_sum, best_h = s, h
-    return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
 
 def time_ago(ts: datetime, now_: datetime) -> str:
     secs = int(max(0, (now_ - ts).total_seconds()))
@@ -279,7 +253,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (HTML BOXES)
+# ROW 1: 3 KPI CARDS
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
@@ -322,13 +296,14 @@ with k3:
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (BOXES GUARANTEED)
+# ROW 2: 3 FEATURE CARDS (WITH VERTICAL LINES)
 # =========================
-left, mid, right = st.columns(3, gap="large")
+# 5 Columns: [Card1] [Line] [Card2] [Line] [Card3]
+c1, sep1, c2, sep2, c3 = st.columns([1, 0.05, 1, 0.05, 1])
 
-# --- CARD 4 ---
-with left:
-    with st.container(border=True):
+# --- CARD 4: CAMERA ---
+with c1:
+    with st.container(border=True): # Kotak 1
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -360,9 +335,13 @@ with left:
                 if st.button("Select This Event", key=f"sel_{uid}"):
                     st.session_state.selected_alert_uid = uid
 
-# --- CARD 5 ---
-with mid:
-    with st.container(border=True):
+# --- SEPARATOR 1 ---
+with sep1:
+    st.markdown('<div class="vertical-line"></div>', unsafe_allow_html=True)
+
+# --- CARD 5: ALERTS ---
+with c2:
+    with st.container(border=True): # Kotak 2
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -392,9 +371,13 @@ with mid:
                     if st.button(f"View {str(r[col_id])}", key=f"btn_{uid}"):
                         st.session_state.selected_alert_uid = uid
 
-# --- CARD 6 ---
-with right:
-    with st.container(border=True):
+# --- SEPARATOR 2 ---
+with sep2:
+    st.markdown('<div class="vertical-line"></div>', unsafe_allow_html=True)
+
+# --- CARD 6: PICTURE ---
+with c3:
+    with st.container(border=True): # Kotak 3
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
