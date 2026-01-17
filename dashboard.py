@@ -134,13 +134,30 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
   border-color:rgba(30,41,59,.30) !important;
 }
 
-/* ===== Row 1 KPI: SINGLE OUTER BORDER ONLY (no Streamlit border wrapper) ===== */
+/* The KPI card itself (the ONLY border you want in Row 1) */
 .kpi-card{
   background:#ffffff;
   border:1.5px solid #475569;
   border-radius:16px;
   box-shadow:0 4px 6px -1px rgba(0,0,0,0.10);
   padding:16px;
+}
+
+/* Row 1 only: if ANY streamlit border wrapper exists, kill it */
+#row1 [data-testid="stVerticalBlockBorderWrapper"]{
+  border:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  padding:0 !important;
+}
+#row1 [data-testid="stVerticalBlockBorderWrapper"] > div{
+  border:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  padding:0 !important;
+}
+
+
 }
 
 </style>
@@ -385,8 +402,10 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (HTML cards -> ONE border only)
+# ROW 1: KPI
 # =========================
+st.markdown('<div id="row1">', unsafe_allow_html=True)
+
 k1, k2, k3 = st.columns(3, gap="medium")
 
 with k1:
@@ -434,6 +453,7 @@ with k3:
         unsafe_allow_html=True,
     )
 
+st.markdown('</div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 2: SAME HEIGHT for 3 cards + Active Alerts scroll inside fixed box
