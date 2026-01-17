@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: FORCE LIGHT THEME ON DATAFRAME & TOOLS
+# CSS: FORCE LIGHT THEME ON DATAFRAME, TOOLBAR & CARDS
 # =========================
 st.markdown(
     f"""
@@ -42,36 +42,37 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     color: #ffffff !important;
 }}
 
-/* 3. DATAFRAME & TOOLBAR OVERRIDES (The Fix) */
-/* Force the toolbar (Download/Search) to be light */
+/* 3. DATAFRAME TOOLBAR OVERRIDES (The Options above table) */
 [data-testid="stElementToolbar"] {{
-    background-color: #ffffff !important;
-    color: #000000 !important;
+    background-color: #ffffff !important; /* Force White Background */
+    color: #000000 !important; /* Force Dark Text */
     border: 1px solid #e2e8f0;
     border-radius: 8px;
+    font-weight: 900 !important; /* Bold */
 }}
 [data-testid="stElementToolbar"] button {{
     color: #000000 !important;
+    font-weight: 900 !important;
 }}
 [data-testid="stElementToolbar"] svg {{
-    fill: #000000 !important;
+    fill: #000000 !important; /* Force Icons Black */
+}}
+[data-testid="stElementToolbar"] :hover {{
+    background-color: #f1f5f9 !important;
 }}
 
-/* Force Table Headers to be Light & Bold */
-[data-testid="stDataFrame"] th {{
-    background-color: #f8fafc !important;
-    color: #0f172a !important;
-    font-weight: 900 !important; /* Bold */
-    border-bottom: 2px solid #9e5908 !important; /* Brown underline */
-}}
-/* Force Table Cells to be Light */
-[data-testid="stDataFrame"] td {{
+/* 4. FORCE DATAFRAME HEADERS & CELLS TO LIGHT MODE */
+[data-testid="stDataFrame"] {{
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    border: 1px solid #e2e8f0;
+}}
+/* This targets the internal structure of the dataframe to force light mode colors */
+[data-testid="stDataFrame"] div[data-testid="stVerticalBlock"] {{
+    background-color: #ffffff !important;
+    color: #000000 !important;
 }}
 
-/* 4. KPI CARDS (Row 1) - Manual HTML Box */
+/* 5. KPI CARDS (Row 1) */
 .kpi-card {{
     background-color: #ffffff;
     border: 1px solid #9e5908;
@@ -83,10 +84,10 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     height: 100%;
 }}
 
-/* 5. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
+/* 6. ROW 2 & 4 CARD STYLE */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; /* Brown Border */
+    border: 1px solid #9e5908 !important; 
     border-radius: 12px !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     padding: 20px !important;
@@ -100,7 +101,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     padding: 0 !important;
 }}
 
-/* 6. Header */
+/* 7. Header */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
@@ -108,7 +109,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
-/* 7. Buttons */
+/* 8. Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
     background: #ffffff !important; color: #0f172a !important;
@@ -116,13 +117,13 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 8. Vertical Line Separator */
+/* 9. Vertical Line Separator */
 .vertical-line {{
     border-left: 2px solid #9e5908;
     height: 500px; margin: auto;
 }}
 
-/* 9. Thumbnails */
+/* 10. Thumbnails */
 .thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
@@ -515,32 +516,28 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     
-    # 1. Force Pandas Styler to Light Mode
+    # --- UPDATED TABLE STYLING ---
+    # 1. Background White, Text Black
+    # 2. Header: Light Grey (#f8fafc), Bold Text
+    # 3. Toolbar is handled by CSS above
+    
     def highlight_sev(val):
         return 'color: #000000 !important;'
     
-    # 2. Add Specific Table Styling using `set_table_styles` to override Streamlit
     styled_df = show.style.set_properties(**{
         'background-color': '#ffffff', 
         'color': '#000000 !important', 
         'border-color': '#e2e8f0'
-    }).map(highlight_sev, subset=['Severity']).set_table_styles(
-        [{
-            'selector': 'th',
-            'props': [
-                ('background-color', '#f8fafc'),
-                ('color', '#0f172a !important'),
-                ('font-weight', 'bold !important'),
-                ('border-bottom', '2px solid #9e5908')
-            ]
-        }]
-    )
+    }).map(highlight_sev, subset=['Severity']).set_table_styles([
+        {'selector': 'th', 'props': [('background-color', '#f8fafc'), ('color', '#0f172a !important'), ('font-weight', '900'), ('border-bottom', '2px solid #cbd5e1')]},
+        {'selector': 'td', 'props': [('color', '#000000 !important')]}
+    ])
 
     st.dataframe(
         styled_df, 
         use_container_width=True, 
         height=380, 
-        hide_index=True, # Hides the index column (0,1,2..)
+        hide_index=True, # HIDES THE INDEX COLUMN (0, 1, 2...)
         column_config={
             "Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), 
             "Detection ID": st.column_config.TextColumn("ID", width="small")
