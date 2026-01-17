@@ -25,47 +25,53 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Targeting Individual Cards with Visible Borders)
+# CSS: STRICT CARD SEPARATION
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
+/* 1. Global Background (Beige) */
 html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
-.stApp{{background:#f7f4ef}}
+.stApp{{background:#f7f4ef !important}}
 .block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 
-/* Text Colors */
+/* 2. Text Colors */
 .stApp, .stApp *{{color:#0f172a !important}}
 [data-testid="stCaptionContainer"] *{{color:#64748b !important}}
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== 2. INDIVIDUAL CARD BORDER ====== */
-/* This targets ONLY the st.container(border=True) wrappers */
+/* 3. CARD STYLE: Targets specific st.container(border=True) */
+/* This makes every card White with a THICK DARK GREY BORDER */
 [data-testid="stVerticalBlockBorderWrapper"]{{
   background-color: #ffffff !important;
-  border: 2px solid #94a3b8 !important; /* VISIBLE GREY BORDER (2px) */
-  border-radius: 12px !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+  
+  /* THICK DARK BORDER - 100% VISIBLE */
+  border: 2px solid #475569 !important; 
+  
+  border-radius: 16px !important;
+  
+  /* SHADOW FOR LIFT */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+  
   padding: 16px !important;
-  margin-bottom: 16px !important; /* Space below each card */
+  margin-bottom: 0px !important; 
 }}
 
-/* ====== 3. REMOVE INNER BORDER ====== */
-/* If a border wrapper (scroll area) is INSIDE another border wrapper (card), remove its border */
+/* 4. PREVENT DOUBLE BORDERS */
+/* If a bordered container is INSIDE another, hide its border */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
-  padding: 0 !important;
   background: transparent !important;
+  padding: 0 !important;
 }}
 
-/* Header Bar */
+/* 5. Header Bar */
 .headerbar{{
   background:#ffffff;
-  border: 2px solid #94a3b8; /* Match Card Border */
-  border-radius:12px;
+  border: 2px solid #475569;
+  border-radius:16px;
   box-shadow:0 4px 6px rgba(0,0,0,0.05);
   padding:14px 16px;
   margin-bottom:20px;
@@ -113,8 +119,19 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .thumb-sub{{margin-top:-2px;color:#64748b !important}}
 
 /* Buttons */
-.stButton > button{{width:100%;background:#ffffff !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.18) !important;border-radius:12px !important;font-weight:900 !important;box-shadow:none !important;}}
-.stButton > button:hover{{background:#f8fafc !important;border-color:rgba(30,41,59,.30) !important;}}
+.stButton > button{{
+  width:100%;
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid rgba(30,41,59,.18) !important;
+  border-radius:12px !important;
+  font-weight:900 !important;
+  box-shadow:none !important;
+}}
+.stButton > button:hover{{
+  background:#f8fafc !important;
+  border-color:rgba(30,41,59,.30) !important;
+}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -228,9 +245,7 @@ df = raw.copy()
 df["ts"] = df[col_ts].apply(parse_ts)
 df = df.dropna(subset=["ts"]).copy()
 
-if col_id is None:
-    df["detection_id"] = ["DET-" + str(i).zfill(6) for i in range(1, len(df) + 1)]
-    col_id = "detection_id"
+if col_id is None: df["detection_id"] = ["DET-" + str(i).zfill(6) for i in range(1, len(df) + 1)]; col_id = "detection_id"
 if col_cam is None: df["camera"] = SINGLE_CAMERA_NAME; col_cam = "camera"
 if col_camtype is None: df["camera_type"] = SINGLE_CAMERA_NAME; col_camtype = "camera_type"
 if col_loc is None: df["location"] = SINGLE_LOCATION_NAME; col_loc = "location"
@@ -252,11 +267,8 @@ df["date_local"] = df["ts"].dt.date
 df["hour"] = df["ts"].dt.hour
 df_sorted = df.sort_values("ts", ascending=False).reset_index(drop=True)
 
-# =========================
-# STATE
-# =========================
+# State
 def row_uid(r): return f"{str(r[col_id])}__{r['ts'].isoformat()}"
-
 if "selected_alert_uid" not in st.session_state: st.session_state.selected_alert_uid = ""
 if st.session_state.selected_alert_uid == "" and len(df_sorted) > 0:
     st.session_state.selected_alert_uid = row_uid(df_sorted.iloc[0])
@@ -268,9 +280,7 @@ def get_selected_row():
     if m.sum() == 0: return None
     return df_sorted[m].iloc[0]
 
-# =========================
-# KPI
-# =========================
+# Metrics
 now = datetime.now(TZ)
 today = now.date()
 yday = (now - timedelta(days=1)).date()
@@ -307,23 +317,27 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (GAP + BORDER)
+# ROW 1: THE 3 KPI CARDS (SEPARATED)
 # =========================
-# Added gap="medium" to create physical space between the cards
-k1, k2, k3 = st.columns(3, gap="medium") 
+k1, k2, k3 = st.columns(3, gap="medium")
 
+# Card 1
 with k1:
     with st.container(border=True):
         st.markdown(
             f"""<div class="kpi-top"><div class="kpi-ico" style="background:#fee2e2;color:#b91c1c">⛔</div>{delta_chip(pct_change(new_today, new_yday))}</div><div class="kpi-val">{new_today}</div><div class="kpi-lab">New Alerts</div>""",
             unsafe_allow_html=True,
         )
+
+# Card 2
 with k2:
     with st.container(border=True):
         st.markdown(
-            f"""<div class="kpi-top"><div class="kpi-ico" style="background:#e0f2fe;color:#075985">📊</div>{delta_chip(pct_change(dogs_today, dogs_yday))}</div><div class="kpi-val">{dogs_today}</div><div class="kpi-lab">Total Dogs Detected</div>""",
+            f"""<div class="kpi-top"><div class="kpi-ico" style="background:#e0f2fe;color:#075985">📊</div>{delta_chip(pct_change(dogs_today, dogs_yday))}</div><div class="kpi-val">{dogs_today}</div><div class="kpi-lab">Total Stray Dogs Detected</div>""",
             unsafe_allow_html=True,
         )
+
+# Card 3
 with k3:
     with st.container(border=True):
         st.markdown(
@@ -334,18 +348,16 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: MAIN CARDS (GAP + BORDER)
+# ROW 2: THE 3 FEATURE CARDS (SEPARATED)
 # =========================
-# Added gap="medium" to force separation
 left, mid, right = st.columns([1.05, 0.95, 1.05], gap="medium")
 
-# --- LEFT (Camera) ---
+# --- CARD 4: CAMERA FEED ---
 with left:
     with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner content (NO BORDER on the scroll area)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
@@ -388,13 +400,12 @@ with left:
                 if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
                     st.session_state.selected_alert_uid = uid
 
-# --- MIDDLE (Alerts) ---
+# --- CARD 5: ACTIVE ALERTS ---
 with mid:
     with st.container(border=True):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner scroll area (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
@@ -436,12 +447,11 @@ with mid:
                     if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
                         st.session_state.selected_alert_uid = uid
 
-# --- RIGHT (Picture) ---
+# --- CARD 6: ACTIVE ALERT PICTURE ---
 with right:
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner scroll area (NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
@@ -480,76 +490,6 @@ with right:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: Trends
-# =========================
-with st.container(border=True):
-    st.subheader("📈 Detection Trends & Analytics")
-    mode = st.radio("Time Range", ["24 Hours", "7 Days", "Severity"], horizontal=True)
-
-    if mode == "24 Hours":
-        start = now - timedelta(hours=24)
-        d = df_sorted[df_sorted["ts"] >= start].copy()
-        hourly = d.groupby("hour").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
-        hours = list(range(24))
-        hourly = hourly.set_index("hour").reindex(hours, fill_value=0).reset_index()
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
-        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
-        fig.update_xaxes(dtick=1, tickmode="linear")
-        st.plotly_chart(fig, use_container_width=True)
-        peak = compute_peak_2hr(hourly.set_index("hour")["dogs"].to_dict())
-        avg_daily = int(hourly["detections"].sum())
-
-    elif mode == "7 Days":
-        start = now - timedelta(days=7)
-        d = df_sorted[df_sorted["ts"] >= start].copy()
-        d["day"] = d["ts"].dt.date
-        daily = d.groupby("day").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
-
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
-        fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=360)
-        st.plotly_chart(fig, use_container_width=True)
-        peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
-        avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
-
-    else:
-        start = now - timedelta(days=7)
-        d = df_sorted[df_sorted["ts"] >= start].copy()
-        sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
-        counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
-        fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.55)])
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
-        st.plotly_chart(fig, use_container_width=True)
-        peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
-        d["day"] = d["ts"].dt.date
-        daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
-        avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
-
-    b1, b2 = st.columns(2)
-    with b1:
-        st.markdown(
-            f"<div style='text-align:center;padding:14px 0 4px 0'>"
-            f"<div class='small-muted'>Peak Hour</div>"
-            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{peak}</div>"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-    with b2:
-        st.markdown(
-            f"<div style='text-align:center;padding:14px 0 4px 0'>"
-            f"<div class='small-muted'>Avg Daily Detections</div>"
-            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div>"
-            f"</div>",
-            unsafe_allow_html=True,
-        )
-
-st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
-
-# =========================
 # ROW 4: Recent Events
 # =========================
 with st.container(border=True):
@@ -565,5 +505,3 @@ with st.container(border=True):
         "—"
     )
     st.dataframe(show, use_container_width=True, height=380)
-
-
