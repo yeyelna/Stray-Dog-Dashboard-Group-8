@@ -15,19 +15,19 @@ TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
 
-# Single deployment assumption (1 camera + 1 location)
+# Single deployment assumption
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
-# ROW 2: FIXED HEIGHT (ALL 3 MUST MATCH)
-ROW2_CARD_HEIGHT_PX = 560          # <-- this is the visible card height (do NOT increase)
-ROW2_HEADER_PAD_PX = 115           # reserve space for title + caption + some spacing
-ALERTS_SCROLL_HEIGHT_PX = max(260, ROW2_CARD_HEIGHT_PX - ROW2_HEADER_PAD_PX)
+# ROW 2: FIXED HEIGHT
+# We only use ONE container height now. 
+# We remove the inner calculations because the whole card will handle the scroll.
+ROW2_CARD_HEIGHT_PX = 560           
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (ONE outer border per feature; Row2 equal height + inner scroll)
+# CSS 
 # =========================
 st.markdown(
     f"""
@@ -42,17 +42,18 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== OUTER BORDER STYLE (applies ONLY to st.container(border=True)) ====== */
+/* ====== OUTER BORDER STYLE ====== */
+/* This targets st.container(border=True) AND st.container(height=...) */
 [data-testid="stVerticalBlockBorderWrapper"]{{
   background:#faf7f2 !important;
-  border:1.6px solid rgba(15,23,42,.35) !important;   /* darker border */
+  border:1.6px solid rgba(15,23,42,.35) !important;   
   border-radius:22px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
   padding:16px !important;
   margin:0 !important;
-  overflow:hidden !important;
+  overflow:hidden !important; /* Ensures content stays inside rounded corners */
 }}
-/* remove any inner “extra frame” look */
+/* Clean up inner spacing */
 [data-testid="stVerticalBlockBorderWrapper"] > div{{
   border:none !important;
   background:transparent !important;
@@ -261,7 +262,7 @@ col_camtype = pick_col(raw, ["camera_type", "type"])
 col_dogs = pick_col(raw, ["dogs", "dog_count", "num_dogs", "count"])
 col_conf = pick_col(raw, ["confidence", "conf", "score"])
 col_sev = pick_col(raw, ["severity", "priority", "level"])
-col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional (table)
+col_status = pick_col(raw, ["status", "alert_status", "state"]) 
 img_candidates = [c for c in raw.columns if ("url" in c or "image" in c or "snapshot" in c or "photo" in c)]
 col_img = pick_col(raw, ["snapshot_url", "image_url", "img_url", "photo_url", "snapshot", "image", "url"]) or (
     img_candidates[0] if len(img_candidates) > 0 else None
@@ -378,7 +379,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (ONE OUTER BORDER EACH)
+# ROW 1: KPI
 # =========================
 k1, k2, k3 = st.columns(3)
 
@@ -427,159 +428,163 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: SAME HEIGHT + ACTIVE ALERTS SCROLL (DO NOT INCREASE HEIGHT)
+# ROW 2: SINGLE BORDER / EQUAL HEIGHT / SINGLE SCROLL CONTEXT
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
+# --- LEFT COLUMN (Camera) ---
 with left:
-    with st.container(border=True):
-        with st.container(height=ROW2_CARD_HEIGHT_PX):
-            st.subheader("📷 Camera Feeds & Snapshots")
-            st.caption("Latest detection (single feed)")
+    # Use ONLY height=... (CSS gives it the border). No outer 'with st.container(border=True)'
+    with st.container(height=ROW2_CARD_HEIGHT_PX):
+        st.subheader("📷 Camera Feeds & Snapshots")
+        st.caption("Latest detection (single feed)")
 
-            if len(df_sorted) == 0:
-                st.info("No detection records.")
-            else:
-                r = df_sorted.iloc[0]
-                uid = row_uid(r)
-                ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
-                mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
-                dogs = int(r[col_dogs])
-                dog_word = "stray dog" if dogs == 1 else "stray dogs"
-                cam = str(r[col_cam])
-                loc = str(r[col_loc])
-
-                img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
-                if img_ok:
-                    st.markdown(
-                        f"""
-                        <div class="thumb">
-                          <img src="{str(r[col_img])}" />
-                          <div class="overlay">
-                            <div class="ov-pill">● ONLINE</div>
-                            <div class="ov-pill ov-rec">● REC</div>
-                            <div class="ov-cam">{cam}</div>
-                          </div>
-                          <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} {dog_word}</div>
-                        </div>
-                        <div class="thumb-title">{loc}</div>
-                        <div class="thumb-sub">{cam} • {ts_txt}</div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                else:
-                    st.markdown(
-                        """
-                        <div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
-                          No Snapshot URL
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                    st.markdown(f"**{loc}**")
-                    st.caption(f"{cam} • {ts_txt}")
-
-                if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
-                    st.session_state.selected_alert_uid = uid
-
-def render_alert_list(data):
-    with st.container(height=ALERTS_SCROLL_HEIGHT_PX):
-        if len(data) == 0:
-            st.info("No alerts.")
-            return
-
-        lim = min(len(data), 150)
-        for i in range(lim):
-            r = data.iloc[i]
+        if len(df_sorted) == 0:
+            st.info("No detection records.")
+        else:
+            r = df_sorted.iloc[0]
             uid = row_uid(r)
-            sev_class, sev_txt = severity_badge(r[col_sev])
-            conf = r[col_conf]
-            conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
             ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
+            mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
             dogs = int(r[col_dogs])
-            dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
-            ago_txt = time_ago(r["ts"], now)
+            dog_word = "stray dog" if dogs == 1 else "stray dogs"
+            cam = str(r[col_cam])
+            loc = str(r[col_loc])
+
+            img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
+            if img_ok:
+                st.markdown(
+                    f"""
+                    <div class="thumb">
+                      <img src="{str(r[col_img])}" />
+                      <div class="overlay">
+                        <div class="ov-pill">● ONLINE</div>
+                        <div class="ov-pill ov-rec">● REC</div>
+                        <div class="ov-cam">{cam}</div>
+                      </div>
+                      <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} {dog_word}</div>
+                    </div>
+                    <div class="thumb-title">{loc}</div>
+                    <div class="thumb-sub">{cam} • {ts_txt}</div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    """
+                    <div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
+                      No Snapshot URL
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                st.markdown(f"**{loc}**")
+                st.caption(f"{cam} • {ts_txt}")
+
+            if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
+                st.session_state.selected_alert_uid = uid
+
+# --- MIDDLE COLUMN (Alerts) ---
+def render_alert_list(data):
+    # FIXED: Remove the inner st.container. 
+    # Just render items directly; the PARENT container handles the scrolling.
+    if len(data) == 0:
+        st.info("No alerts.")
+        return
+
+    lim = min(len(data), 150)
+    for i in range(lim):
+        r = data.iloc[i]
+        uid = row_uid(r)
+        sev_class, sev_txt = severity_badge(r[col_sev])
+        conf = r[col_conf]
+        conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
+        ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
+        dogs = int(r[col_dogs])
+        dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
+        ago_txt = time_ago(r["ts"], now)
+
+        st.markdown(
+            f"""
+            <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.16);background:#ffffff;margin-bottom:10px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                <div style="min-width:0">
+                  <div style="font-weight:900">
+                    {dogs} {dog_word} Detected
+                    <span class="{sev_class}" style="margin-left:8px">{sev_txt}</span>
+                  </div>
+                  <div class="small-muted">{str(r[col_camtype])} • {str(r[col_cam])}</div>
+                  <div class="small-muted">📍 {str(r[col_loc])}</div>
+                  <div class="small-muted">🕒 {ts_txt} • 🎯 {conf_txt}</div>
+                </div>
+                <div style="text-align:right;flex-shrink:0">
+                  <span class="badge badge-time" style="display:block;white-space:nowrap">{ago_txt}</span>
+                </div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
+            st.session_state.selected_alert_uid = uid
+
+with mid:
+    # Use ONLY height=... (CSS gives it the border)
+    with st.container(height=ROW2_CARD_HEIGHT_PX):
+        st.subheader("⛔ Active Alerts")
+        st.caption("Scroll to view older detections")
+        render_alert_list(df_sorted)
+
+# --- RIGHT COLUMN (Picture) ---
+with right:
+    # Use ONLY height=... (CSS gives it the border)
+    with st.container(height=ROW2_CARD_HEIGHT_PX):
+        st.subheader("🖼️ Active Alert Picture")
+        sel = get_selected_row()
+
+        if sel is None:
+            st.info("Please select an alert to view the snapshot.")
+        else:
+            sev_class, sev_txt = severity_badge(sel[col_sev])
+            ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
+            conf = sel[col_conf]
+            conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
 
             st.markdown(
                 f"""
-                <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.16);background:#ffffff;margin-bottom:10px">
-                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-                    <div style="min-width:0">
-                      <div style="font-weight:900">
-                        {dogs} {dog_word} Detected
-                        <span class="{sev_class}" style="margin-left:8px">{sev_txt}</span>
-                      </div>
-                      <div class="small-muted">{str(r[col_camtype])} • {str(r[col_cam])}</div>
-                      <div class="small-muted">📍 {str(r[col_loc])}</div>
-                      <div class="small-muted">🕒 {ts_txt} • 🎯 {conf_txt}</div>
-                    </div>
-                    <div style="text-align:right">
-                      <span class="badge badge-time">{ago_txt}</span>
-                    </div>
-                  </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                  <div style="font-weight:900">{str(sel[col_id])}</div>
+                  <span class="{sev_class}">{sev_txt}</span>
+                  <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
-            if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
-                st.session_state.selected_alert_uid = uid
-
-with mid:
-    with st.container(border=True):
-        with st.container(height=ROW2_CARD_HEIGHT_PX):
-            st.subheader("⛔ Active Alerts")
-            st.caption("Scroll to view older detections")
-            render_alert_list(df_sorted)
-
-with right:
-    with st.container(border=True):
-        with st.container(height=ROW2_CARD_HEIGHT_PX):
-            st.subheader("🖼️ Active Alert Picture")
-            sel = get_selected_row()
-
-            if sel is None:
-                st.info("Please select an alert to view the snapshot.")
+            img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
+            if img_ok:
+                st.image(str(sel[col_img]), use_container_width=True)
             else:
-                sev_class, sev_txt = severity_badge(sel[col_sev])
-                ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
-                conf = sel[col_conf]
-                conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
-
                 st.markdown(
-                    f"""
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-                      <div style="font-weight:900">{str(sel[col_id])}</div>
-                      <span class="{sev_class}">{sev_txt}</span>
-                      <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
+                    """
+                    <div style="height:260px;border-radius:16px;border:1px dashed rgba(30,41,59,.25);
+                    background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
+                    No Snapshot URL in Sheet
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
-                img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
-                if img_ok:
-                    st.image(str(sel[col_img]), use_container_width=True)
-                else:
-                    st.markdown(
-                        """
-                        <div style="height:260px;border-radius:16px;border:1px dashed rgba(30,41,59,.25);
-                        background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
-                        No Snapshot URL in Sheet
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-
-                st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
-                st.markdown(f"- **Location:** {str(sel[col_loc])}")
-                st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
-                st.markdown(f"- **Confidence:** {conf_txt}")
+            st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
+            st.markdown(f"- **Location:** {str(sel[col_loc])}")
+            st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
+            st.markdown(f"- **Confidence:** {conf_txt}")
 
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: Trends (unchanged logic; keep as-is)
+# ROW 3: Trends
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -653,7 +658,7 @@ with st.container(border=True):
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: Recent Events (scrollable log)
+# ROW 4: Recent Events
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -670,6 +675,3 @@ with st.container(border=True):
     )
 
     st.dataframe(show, use_container_width=True, height=380)
-
-
-
