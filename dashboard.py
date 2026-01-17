@@ -23,86 +23,71 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: TOTAL FORCE LIGHT MODE (AGGRESSIVE)
+# CSS: TOTAL FORCE LIGHT MODE (AGGRESSIVE FIX)
 # =========================
 st.markdown(
     f"""
 <style>
 /* 1. Global Background */
 html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
-.stApp {{ background-color: #f7f4ef !important; color: #000000 !important; }}
+.stApp {{ background-color: #f7f4ef !important; }}
 .block-container {{ padding-top: 2rem; max-width: 1400px; }}
 
-/* 2. FORCE ALL TEXT DARK */
-h1, h2, h3, h4, h5, h6, p, span, div, label, li, a {{
+/* 2. FORCE DARK TEXT GLOBALLY */
+h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     color: #0f172a !important; 
 }}
-/* Exception for Badges/Buttons text */
 .thumb span, .sev-badge {{
-    color: #ffffff !important;
+    color: #ffffff !important; /* Keep badges white text */
 }}
 
 /* ============================================================ */
-/* 3. TABLE & TOOLBAR OVERRIDES (THE CRITICAL FIX)              */
+/* 3. TABLE & TOOLBAR FORCE (THE FIX)                           */
 /* ============================================================ */
 
-/* A. Toolbar (The Option part above table) */
+/* A. FORCE TOOLBAR (Option Part) to Light Grey */
 [data-testid="stElementToolbar"] {{
-    background-color: #ffffff !important;
-    border: 1px solid #ccc !important;
+    background-color: #f8fafc !important; /* GREY CAIR */
+    border: 1px solid #cbd5e1 !important;
     color: #000000 !important;
-    opacity: 1 !important; /* Force visible */
+    border-radius: 8px !important;
 }}
-/* Force Toolbar Buttons */
+/* Force Icons in Toolbar to Black */
 [data-testid="stElementToolbar"] button {{
     color: #000000 !important;
-    background-color: transparent !important;
-    border: none !important;
 }}
-/* Force Toolbar Icons (SVG) to Black */
 [data-testid="stElementToolbar"] svg {{
     fill: #000000 !important;
     color: #000000 !important;
-    stroke: #000000 !important;
 }}
 [data-testid="stElementToolbar"]:hover {{
-    background-color: #f0f0f0 !important;
+    background-color: #e2e8f0 !important; /* Darker grey on hover */
 }}
 
-/* B. The Table Container */
+/* B. FORCE TABLE CONTAINER */
 [data-testid="stDataFrame"] {{
     background-color: #ffffff !important;
     border: 1px solid #e2e8f0;
 }}
 
-/* C. Table Headers (Column Names) */
+/* C. FORCE TABLE HEADERS (Header Log) to Light Grey */
 [data-testid="stDataFrame"] th {{
-    background-color: #f1f5f9 !important; /* Light Grey Header */
-    color: #000000 !important; /* Black Text */
-    fill: #000000 !important;
-    font-weight: 900 !important; /* Bold */
-    border-bottom: 2px solid #9e5908 !important;
-}}
-/* Fix specifically for sort icons in header */
-[data-testid="stDataFrame"] th svg {{
-    fill: #000000 !important; 
+    background-color: #f8fafc !important; /* GREY CAIR */
+    color: #000000 !important; /* TULISAN HITAM */
+    font-weight: 900 !important;
+    border-bottom: 2px solid #9e5908 !important; /* Garis Coklat */
 }}
 
-/* D. Table Cells (Rows) */
+/* D. FORCE TABLE CELLS (Isi Log) to White & Black Text */
 [data-testid="stDataFrame"] td {{
     background-color: #ffffff !important;
-    color: #000000 !important;
+    color: #000000 !important; /* TULISAN HITAM */
     border-bottom: 1px solid #e2e8f0 !important;
-}}
-
-/* E. Force Light Scheme specifically on the DataFrame Component */
-iframe[title="streamlit.components.v1.components.dataframe"] {{
-    color-scheme: light !important;
 }}
 
 /* ============================================================ */
 
-/* 4. KPI CARDS (Row 1) - Manual HTML Box */
+/* 4. KPI CARDS (Row 1) */
 .kpi-card {{
     background-color: #ffffff;
     border: 1px solid #9e5908;
@@ -114,7 +99,7 @@ iframe[title="streamlit.components.v1.components.dataframe"] {{
     height: 100%;
 }}
 
-/* 5. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
+/* 5. ROW 2 & 4 CARD STYLE */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
     border: 1px solid #9e5908 !important; 
@@ -131,7 +116,7 @@ iframe[title="streamlit.components.v1.components.dataframe"] {{
     padding: 0 !important;
 }}
 
-/* 6. Header */
+/* 6. Header Area */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
@@ -489,7 +474,7 @@ with c3:
 # SEPARATOR LINE UNDER ROW 2
 # =========================
 st.markdown(
-    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
+    """<hr style="height:1px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
     unsafe_allow_html=True
 )
 
@@ -538,7 +523,7 @@ with st.container(border=True):
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS (LIGHT MODE FORCED)
+# ROW 4: RECENT EVENTS
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -549,16 +534,18 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     
-    # 1. Force Pandas Styler to Light Mode with Black Text
+    # --- UPDATED TABLE STYLING FOR LIGHT MODE FORCE ---
     def highlight_sev(val):
-        return 'color: #000000 !important;'
+        return 'color: #000000 !important;' 
     
     styled_df = show.style.set_properties(**{
         'background-color': '#ffffff', 
         'color': '#000000 !important', 
         'border-color': '#e2e8f0'
     }).map(highlight_sev, subset=['Severity']).set_table_styles([
+        # Headers: Grey Cair (#f8fafc) & Black Bold Text
         {'selector': 'th', 'props': [('background-color', '#f8fafc'), ('color', '#000000 !important'), ('font-weight', '900'), ('border-bottom', '2px solid #9e5908')]},
+        # Rows: White BG & Black Text
         {'selector': 'td', 'props': [('color', '#000000 !important'), ('background-color', '#ffffff !important')]}
     ])
 
@@ -566,7 +553,7 @@ with st.container(border=True):
         styled_df, 
         use_container_width=True, 
         height=380, 
-        hide_index=True, 
+        hide_index=True,
         column_config={
             "Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), 
             "Detection ID": st.column_config.TextColumn("ID", width="small")
