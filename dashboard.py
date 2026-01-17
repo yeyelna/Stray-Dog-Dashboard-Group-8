@@ -23,26 +23,15 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: THE "NUCLEAR" LIGHT MODE FORCE
+# CSS: FORCE DARK TEXT & BOX STYLING
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. FORCE STREAMLIT SYSTEM VARIABLES TO LIGHT MODE */
-/* Ini adalah bahagian paling penting. Ia menukar "DNA" warna Streamlit */
-:root {{
-    --primary-color: #9e5908;
-    --background-color: #f7f4ef;
-    --secondary-background-color: #ffffff;
-    --text-color: #0d0700;
-    --font: "Inter", sans-serif;
-}}
-
-/* 2. Global Background & Text */
+/* 1. Global Background - Force Beige/White */
 html, body, [class*="css"] {{
     font-family: 'Inter', sans-serif;
     background-color: #f7f4ef !important;
-    color: #0d0700 !important; /* Paksa teks hitam */
 }}
 .stApp {{
     background-color: #f7f4ef !important;
@@ -53,69 +42,46 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 3. FIX FOR "ANALYTICS VIEW" RADIO BUTTONS & LABELS */
-/* Masalah dalam screenshot di mana tulisan hilang */
-[data-testid="stRadio"] label, [data-testid="stRadio"] p {{
-    color: #0d0700 !important;
-}}
-div[role="radiogroup"] label {{
-    color: #0d0700 !important;
-}}
-
-/* 4. DATAFRAME & TOOLBAR FORCE (The Table Fix) */
-/* Force Table Container White */
-[data-testid="stDataFrame"] {{
-    background-color: #ffffff !important;
-    border: 1px solid #e2e8f0;
-}}
-/* Force Toolbar (Option Part) to Light */
-[data-testid="stElementToolbar"] {{
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border: 1px solid #cbd5e1;
-}}
-[data-testid="stElementToolbar"] button {{
-    color: #000000 !important;
-}}
-[data-testid="stElementToolbar"] svg {{
-    fill: #000000 !important;
-    stroke: #000000 !important;
-}}
-[data-testid="stElementToolbar"]:hover {{
-    background-color: #f1f5f9 !important;
-}}
-
-/* Force Headers */
-[data-testid="stDataFrame"] th {{
-    background-color: #f8fafc !important;
-    color: #000000 !important;
-    border-bottom: 2px solid #9e5908 !important;
-}}
-/* Force Cells */
-[data-testid="stDataFrame"] td {{
-    background-color: #ffffff !important;
-    color: #000000 !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-}}
-
-/* 5. GENERAL COMPONENT TEXT FORCE */
+/* 2. FORCE TEXT COLOR TO BE DARK (Override System Dark Mode) */
+/* This forces all standard text elements to be dark grey/black */
 h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     color: #0f172a !important; 
 }}
-/* Exception: Text inside Badges/Buttons must remain white */
+/* Specific override for Streamlit metrics to ensure numbers are dark */
+[data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
+    color: #0f172a !important;
+}}
+/* Muted text (slightly lighter grey but still visible) */
+.small-muted {{
+    color: #334155 !important; 
+}}
+
+/* 3. EXCEPTION: Keep text white inside specific badges/buttons */
 .thumb span, .sev-badge {{
     color: #ffffff !important;
 }}
 
-/* 6. CARDS STYLING */
-.kpi-card, [data-testid="stVerticalBlockBorderWrapper"] {{
+/* 4. MANUAL KPI CARD STYLE (Row 1 HTML) */
+.kpi-card {{
+    background-color: #ffffff;
+    border: 1px solid #9e5908;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}}
+
+/* 5. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
+[data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important;
+    border: 1px solid #9e5908 !important; /* Brown Border */
     border-radius: 12px !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     padding: 20px !important;
-    margin-bottom: 0px !important;
 }}
+
 /* Inner clean up */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
@@ -124,32 +90,40 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     padding: 0 !important;
 }}
 
-/* 7. Header Area */
+/* 6. Header Title Area */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }}
+/* Explicitly force title text color */
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
-/* 8. Buttons */
+/* 7. Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
-    background: #ffffff !important; color: #0f172a !important;
+    background: #ffffff !important; 
+    color: #0f172a !important; /* Force button text dark */
     font-weight: 700; border-radius: 10px;
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 9. Vertical Line */
+/* 8. Vertical Line Separator */
 .vertical-line {{
     border-left: 2px solid #9e5908;
-    height: 500px; margin: auto;
+    height: 500px;
+    margin: auto;
 }}
 
-/* 10. Thumbnails */
+/* 9. Thumbnails & Badges */
 .thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
+
+/* 10. Table Styling (Force Dark Text) */
+table.custom-table {{ width: 100%; border-collapse: collapse; color: #0f172a !important; font-size: 14px; }}
+table.custom-table th {{ background-color: #f1f5f9; color: #0f172a !important; padding: 10px; border-bottom: 2px solid #cbd5e1; }}
+table.custom-table td {{ padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a !important; }}
 </style>
 """,
     unsafe_allow_html=True,
@@ -215,21 +189,14 @@ def compute_peak_2hr(hourly_dogs_dict):
     return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
 
 def time_ago(ts: datetime, now_: datetime) -> str:
-    diff = now_ - ts
-    secs = int(max(0, diff.total_seconds()))
+    secs = int(max(0, (now_ - ts).total_seconds()))
     if secs < 60: return "just now"
     mins = secs // 60
     if mins < 60: return f"{mins}m ago"
     hrs = mins // 60
     if hrs < 24: return f"{hrs}h ago"
     days = hrs // 24
-    if days < 7: return f"{days}d ago"
-    weeks = days // 7
-    if weeks < 4: return f"{weeks}w ago"
-    months = days // 30
-    if months < 12: return f"{months}mo ago"
-    years = days // 365
-    return f"{years}y ago"
+    return f"{days}d ago"
 
 def delta_chip(pct):
     if pct is None or np.isnan(pct): return '<span style="color:#16a34a; font-weight:bold; font-size:12px">+0%</span>'
@@ -370,11 +337,12 @@ st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 # =========================
 # ROW 2: 3 FEATURE CARDS
 # =========================
+# 5 Columns: [Card1] [Line] [Card2] [Line] [Card3]
 c1, sep1, c2, sep2, c3 = st.columns([1, 0.05, 1, 0.05, 1])
 
 # --- CARD 4: CAMERA ---
 with c1:
-    with st.container(border=True):
+    with st.container(border=True): # Kotak 1
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -384,7 +352,7 @@ with c1:
             else:
                 r = df_sorted.iloc[0]
                 uid = row_uid(r)
-                time_display = time_ago(r["ts"], now)
+                mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
                 
                 img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
                 if img_ok:
@@ -400,8 +368,11 @@ with c1:
                     st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b !important;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown(f"<div style='margin-top:10px; font-weight:bold; color:#0f172a !important;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='small-muted'>{time_display} • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='small-muted'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
                 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                
+                if st.button("Select This Event", key=f"sel_{uid}"):
+                    st.session_state.selected_alert_uid = uid
 
 # --- SEPARATOR 1 ---
 with sep1:
@@ -409,7 +380,7 @@ with sep1:
 
 # --- CARD 5: ALERTS ---
 with c2:
-    with st.container(border=True):
+    with st.container(border=True): # Kotak 2
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -445,7 +416,7 @@ with sep2:
 
 # --- CARD 6: PICTURE ---
 with c3:
-    with st.container(border=True):
+    with st.container(border=True): # Kotak 3
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
@@ -478,13 +449,7 @@ with c3:
                 st.markdown(f"**Time:** {ts_txt}")
                 st.markdown(f"**Conf:** {conf_txt}")
 
-# =========================
-# SEPARATOR LINE UNDER ROW 2
-# =========================
-st.markdown(
-    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
-    unsafe_allow_html=True
-)
+st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 3: TRENDS & ANALYTICS
@@ -531,7 +496,7 @@ with st.container(border=True):
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS (FORCED LIGHT TABLE)
+# ROW 4: RECENT EVENTS
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -542,29 +507,12 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     
-    # 1. Force Pandas Styler (Black Text)
+    # Force Pandas Styler to Dark Text
     def highlight_sev(val):
-        return 'color: #000000 !important;' 
+        return 'color: #000000 !important;'
     
-    styled_df = show.style.set_properties(**{
-        'background-color': '#ffffff', 
-        'color': '#000000 !important', 
-        'border-color': '#e2e8f0'
-    }).map(highlight_sev, subset=['Severity']).set_table_styles([
-        # Headers: Grey Cair (#f8fafc) & Black Bold Text
-        {'selector': 'th', 'props': [('background-color', '#f8fafc'), ('color', '#000000 !important'), ('font-weight', '900'), ('border-bottom', '2px solid #9e5908')]},
-        # Rows: White BG & Black Text
-        {'selector': 'td', 'props': [('color', '#000000 !important'), ('background-color', '#ffffff !important')]}
-    ])
+    styled_df = show.style.set_properties(**{'background-color': '#ffffff', 'color': '#000000 !important', 'border-color': '#e2e8f0'}).map(highlight_sev, subset=['Severity'])
+    st.dataframe(styled_df, use_container_width=True, height=380, column_config={"Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), "Detection ID": st.column_config.TextColumn("ID", width="small")})
 
-    # 2. Render Dataframe with hide_index=True
-    st.dataframe(
-        styled_df, 
-        use_container_width=True, 
-        height=380, 
-        hide_index=True,
-        column_config={
-            "Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), 
-            "Detection ID": st.column_config.TextColumn("ID", width="small")
-        }
-    )
+
+
