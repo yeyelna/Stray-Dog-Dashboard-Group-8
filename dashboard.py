@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: INDIVIDUAL BOXES FOR EVERY CARD
+# CSS: GUARANTEED BOX STYLING
 # =========================
 st.markdown(
     f"""
@@ -41,24 +41,30 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. CARD STYLE: INDIVIDUAL BOXES */
-/* Targets every st.container(border=True) individually */
+/* 2. MANUAL KPI CARD STYLE (The "Box" you asked for) */
+.kpi-card {{
+    background-color: #ffffff;
+    border: 1px solid #9e5908; /* Brown Border */
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-bottom: 10px; /* Space below */
+}}
+
+/* 3. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    
-    /* THE INDIVIDUAL BOX BORDER (Brown #9e5908) */
-    border: 1px solid #9e5908 !important; 
-    
+    border: 1px solid #9e5908 !important; /* Brown Border */
     border-radius: 12px !important;
-    
-    /* Strong Shadow */
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-    
     padding: 20px !important;
     margin-bottom: 0px !important; 
 }}
 
-/* 3. CLEAN UP INNER CONTENT */
+/* 4. CLEAN UP INNER CONTENT */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -66,11 +72,11 @@ html, body, [class*="css"] {{
     padding: 0 !important;
 }}
 
-/* 4. Text & Headers */
+/* 5. Text & Headers */
 .stApp, .stApp * {{ color: #0d0700 !important; }}
 .small-muted {{ color: #261603 !important; }}
 
-/* 5. Header Title Area */
+/* 6. Header Title Area */
 .header-area {{
     margin-bottom: 30px;
     padding: 20px;
@@ -81,10 +87,10 @@ html, body, [class*="css"] {{
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
-/* 6. Buttons */
+/* 7. Buttons */
 .stButton > button {{
     width: 100%;
-    border: 1px solid #9e5908 !important; /* Matches theme */
+    border: 1px solid #9e5908 !important;
     background: #ffffff !important;
     color: #0f172a !important;
     font-weight: 700;
@@ -95,7 +101,7 @@ html, body, [class*="css"] {{
     background: #fdfae8 !important;
 }}
 
-/* 7. Thumbnails */
+/* 8. Thumbnails */
 .thumb {{
     border-radius: 12px;
     overflow: hidden;
@@ -103,9 +109,6 @@ html, body, [class*="css"] {{
     border: 1px solid #e2e8f0;
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
-
-/* 8. Badges */
-.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
 
 /* 9. Light Mode Table */
 table.custom-table {{ width: 100%; border-collapse: collapse; color: #0f172a; font-size: 14px; }}
@@ -280,45 +283,48 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (INDIVIDUAL BOXES)
+# ROW 1: 3 KPI CARDS (MANUAL HTML BOXES)
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
 # CARD 1
 with k1:
-    with st.container(border=True): # <--- BOX 1
-        st.markdown(f"""
+    st.markdown(f"""
+    <div class="kpi-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">⛔</div>
             {delta_chip(pct_change(new_today, new_yday))}
         </div>
-        <div style="font-size:42px; font-weight:900; margin-top:5px;">{new_today}</div>
+        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700;">{new_today}</div>
         <div style="font-weight:bold; color:#64748b; font-size:14px;">New Alerts</div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 # CARD 2
 with k2:
-    with st.container(border=True): # <--- BOX 2
-        st.markdown(f"""
+    st.markdown(f"""
+    <div class="kpi-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">📊</div>
             {delta_chip(pct_change(dogs_today, dogs_yday))}
         </div>
-        <div style="font-size:42px; font-weight:900; margin-top:5px;">{dogs_today}</div>
+        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700;">{dogs_today}</div>
         <div style="font-weight:bold; color:#64748b; font-size:14px;">Total Stray Dogs Detected</div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 # CARD 3
 with k3:
-    with st.container(border=True): # <--- BOX 3
-        st.markdown(f"""
+    st.markdown(f"""
+    <div class="kpi-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">🚨</div>
             {delta_chip(pct_change(hp_today, hp_yday))}
         </div>
-        <div style="font-size:42px; font-weight:900; margin-top:5px;">{hp_today}</div>
+        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700;">{hp_today}</div>
         <div style="font-weight:bold; color:#64748b; font-size:14px;">High Priority</div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
 
 # === SEPARATOR LINE ===
 st.markdown(
@@ -327,13 +333,13 @@ st.markdown(
 )
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (INDIVIDUAL BOXES)
+# ROW 2: 3 FEATURE CARDS (ST CONTAINERS)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4 ---
 with left:
-    with st.container(border=True): # <--- BOX 4
+    with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -367,7 +373,7 @@ with left:
 
 # --- CARD 5 ---
 with mid:
-    with st.container(border=True): # <--- BOX 5
+    with st.container(border=True):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -399,7 +405,7 @@ with mid:
 
 # --- CARD 6 ---
 with right:
-    with st.container(border=True): # <--- BOX 6
+    with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
