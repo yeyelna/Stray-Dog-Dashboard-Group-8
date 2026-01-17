@@ -23,88 +23,99 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: TOTAL LIGHT MODE FORCE
+# CSS: THE "NUCLEAR" LIGHT MODE FORCE
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
-html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
-.stApp {{ background-color: #f7f4ef !important; }}
-.block-container {{ padding-top: 2rem; max-width: 1400px; }}
-
-/* 2. FORCE DARK TEXT GLOBALLY */
-h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
-    color: #0f172a !important; 
-}}
-/* Exception for Badges/Buttons text (White) */
-.thumb span, .sev-badge {{
-    color: #ffffff !important;
+/* 1. FORCE STREAMLIT SYSTEM VARIABLES TO LIGHT MODE */
+/* Ini adalah bahagian paling penting. Ia menukar "DNA" warna Streamlit */
+:root {{
+    --primary-color: #9e5908;
+    --background-color: #f7f4ef;
+    --secondary-background-color: #ffffff;
+    --text-color: #0d0700;
+    --font: "Inter", sans-serif;
 }}
 
-/* 3. DATAFRAME FORCE LIGHT MODE (CRITICAL FIX) */
-/* Force the main container white */
+/* 2. Global Background & Text */
+html, body, [class*="css"] {{
+    font-family: 'Inter', sans-serif;
+    background-color: #f7f4ef !important;
+    color: #0d0700 !important; /* Paksa teks hitam */
+}}
+.stApp {{
+    background-color: #f7f4ef !important;
+}}
+.block-container {{
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
+}}
+
+/* 3. FIX FOR "ANALYTICS VIEW" RADIO BUTTONS & LABELS */
+/* Masalah dalam screenshot di mana tulisan hilang */
+[data-testid="stRadio"] label, [data-testid="stRadio"] p {{
+    color: #0d0700 !important;
+}}
+div[role="radiogroup"] label {{
+    color: #0d0700 !important;
+}}
+
+/* 4. DATAFRAME & TOOLBAR FORCE (The Table Fix) */
+/* Force Table Container White */
 [data-testid="stDataFrame"] {{
     background-color: #ffffff !important;
     border: 1px solid #e2e8f0;
 }}
-
-/* Force the TOOLBAR (Search/Download) to Light Mode */
+/* Force Toolbar (Option Part) to Light */
 [data-testid="stElementToolbar"] {{
     background-color: #ffffff !important;
     color: #000000 !important;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border: 1px solid #cbd5e1;
 }}
-/* Force Toolbar Icons (SVG) to be Black */
-[data-testid="stElementToolbar"] button svg {{
-    fill: #000000 !important;
-    color: #000000 !important;
-}}
-/* Force Toolbar Text/Buttons to be Black */
 [data-testid="stElementToolbar"] button {{
     color: #000000 !important;
-    font-weight: 900 !important;
+}}
+[data-testid="stElementToolbar"] svg {{
+    fill: #000000 !important;
+    stroke: #000000 !important;
 }}
 [data-testid="stElementToolbar"]:hover {{
     background-color: #f1f5f9 !important;
 }}
 
-/* Force Table Headers (Th) */
+/* Force Headers */
 [data-testid="stDataFrame"] th {{
     background-color: #f8fafc !important;
-    color: #000000 !important; /* Force Black Text */
-    font-weight: 900 !important;
+    color: #000000 !important;
     border-bottom: 2px solid #9e5908 !important;
 }}
-/* Force Table Cells (Td) */
+/* Force Cells */
 [data-testid="stDataFrame"] td {{
     background-color: #ffffff !important;
-    color: #000000 !important; /* Force Black Text */
+    color: #000000 !important;
     border-bottom: 1px solid #e2e8f0 !important;
 }}
 
-/* 4. KPI CARDS (Row 1) - Manual HTML Box */
-.kpi-card {{
-    background-color: #ffffff;
-    border: 1px solid #9e5908;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+/* 5. GENERAL COMPONENT TEXT FORCE */
+h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
+    color: #0f172a !important; 
+}}
+/* Exception: Text inside Badges/Buttons must remain white */
+.thumb span, .sev-badge {{
+    color: #ffffff !important;
 }}
 
-/* 5. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
-[data-testid="stVerticalBlockBorderWrapper"] {{
+/* 6. CARDS STYLING */
+.kpi-card, [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; /* Brown Border */
+    border: 1px solid #9e5908 !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     padding: 20px !important;
+    margin-bottom: 0px !important;
 }}
-
 /* Inner clean up */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
@@ -113,7 +124,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     padding: 0 !important;
 }}
 
-/* 6. Header */
+/* 7. Header Area */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
@@ -121,7 +132,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
-/* 7. Buttons */
+/* 8. Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
     background: #ffffff !important; color: #0f172a !important;
@@ -129,13 +140,13 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 8. Vertical Line Separator */
+/* 9. Vertical Line */
 .vertical-line {{
     border-left: 2px solid #9e5908;
     height: 500px; margin: auto;
 }}
 
-/* 9. Thumbnails */
+/* 10. Thumbnails */
 .thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
@@ -363,7 +374,7 @@ c1, sep1, c2, sep2, c3 = st.columns([1, 0.05, 1, 0.05, 1])
 
 # --- CARD 4: CAMERA ---
 with c1:
-    with st.container(border=True): # Kotak 1
+    with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -398,7 +409,7 @@ with sep1:
 
 # --- CARD 5: ALERTS ---
 with c2:
-    with st.container(border=True): # Kotak 2
+    with st.container(border=True):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -434,7 +445,7 @@ with sep2:
 
 # --- CARD 6: PICTURE ---
 with c3:
-    with st.container(border=True): # Kotak 3
+    with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
@@ -491,6 +502,7 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
+        # Force Chart Text Color to Dark
         fig.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'), xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), legend=dict(font=dict(color='#000000')))
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
@@ -502,6 +514,7 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
+        # Force Chart Text Color to Dark
         fig.update_layout(template="plotly_white", barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'), xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), legend=dict(font=dict(color='#000000')))
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
@@ -511,13 +524,14 @@ with st.container(border=True):
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
+        # Force Chart Text Color to Dark
         fig.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'), legend=dict(font=dict(color='#000000')))
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS
+# ROW 4: RECENT EVENTS (FORCED LIGHT TABLE)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -528,31 +542,29 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     
-    # --- UPDATED TABLE STYLING TO FORCE LIGHT MODE ---
+    # 1. Force Pandas Styler (Black Text)
     def highlight_sev(val):
-        return 'color: #000000 !important;' # Force cell text black
+        return 'color: #000000 !important;' 
     
     styled_df = show.style.set_properties(**{
         'background-color': '#ffffff', 
-        'color': '#000000 !important', # Black text
+        'color': '#000000 !important', 
         'border-color': '#e2e8f0'
     }).map(highlight_sev, subset=['Severity']).set_table_styles([
-        # Force Headers (th) to have light background and black bold text
+        # Headers: Grey Cair (#f8fafc) & Black Bold Text
         {'selector': 'th', 'props': [('background-color', '#f8fafc'), ('color', '#000000 !important'), ('font-weight', '900'), ('border-bottom', '2px solid #9e5908')]},
-        # Force Cells (td) to have black text
+        # Rows: White BG & Black Text
         {'selector': 'td', 'props': [('color', '#000000 !important'), ('background-color', '#ffffff !important')]}
     ])
 
+    # 2. Render Dataframe with hide_index=True
     st.dataframe(
         styled_df, 
         use_container_width=True, 
         height=380, 
-        hide_index=True, # Hide index column
+        hide_index=True,
         column_config={
             "Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), 
             "Detection ID": st.column_config.TextColumn("ID", width="small")
         }
     )
-
-
-
