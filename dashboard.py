@@ -19,15 +19,15 @@ REFRESH_SEC = 8
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
-# ROW 2: HEIGHT CONFIG
-# This controls the height of the SCROLLABLE content area only.
-# The total card height will be this + the header height.
-SCROLLABLE_AREA_HEIGHT = 440  
+# HEIGHT CONFIGURATION
+# This sets the height of the SCROLLABLE CONTENT only.
+# The total card height = Header Height + This Value.
+SCROLL_AREA_HEIGHT = 440
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Single Border + Scroll Fix)
+# CSS (Single Border Logic)
 # =========================
 st.markdown(
     f"""
@@ -42,8 +42,8 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== 1. OUTER CARD STYLE ====== */
-/* This targets the Main Card wrapper */
+/* ====== 1. OUTER CARD STYLE (Visible Border) ====== */
+/* This targets the main st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"]{{
   background:#faf7f2 !important;
   border:1.6px solid rgba(15,23,42,.35) !important;   
@@ -53,9 +53,9 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
   margin:0 !important;
 }}
 
-/* ====== 2. REMOVE INNER BORDER ====== */
-/* Crucial: If a border wrapper is inside another, make it invisible. 
-   This ensures the Scrollable Container (border=False) is truly borderless. */
+/* ====== 2. INNER SCROLL CONTAINER (Invisible Border) ====== */
+/* If a border wrapper is inside another, force it to be invisible.
+   This prevents the "Double Border" effect while keeping scrolling. */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
@@ -331,19 +331,19 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: FIXED TITLE + SCROLLABLE CONTENT
+# ROW 2: CARDS (BORDER=TRUE + SCROLLABLE INNER)
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
 # --- LEFT (Camera) ---
 with left:
-    # Outer Card (Border visible)
+    # 1. Outer Container: Has BORDER=TRUE (The Card)
     with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner Content (Border HIDDEN, Scroll Enabled)
-        with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
+        # 2. Inner Container: Has HEIGHT (Scrolls) but BORDER=FALSE (No Double Border)
+        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
             else:
@@ -387,14 +387,13 @@ with left:
 
 # --- MIDDLE (Alerts) ---
 with mid:
-    # Outer Card (Border visible)
+    # 1. Outer Container: Has BORDER=TRUE (The Card)
     with st.container(border=True):
-        # Header stays fixed at top of card
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Scrollable Area starts BELOW header (Border HIDDEN)
-        with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
+        # 2. Inner Container: Has HEIGHT (Scrolls) but BORDER=FALSE (No Double Border)
+        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
             else:
@@ -437,12 +436,12 @@ with mid:
 
 # --- RIGHT (Picture) ---
 with right:
-    # Outer Card (Border visible)
+    # 1. Outer Container: Has BORDER=TRUE (The Card)
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner Content (Border HIDDEN, Scroll Enabled)
-        with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
+        # 2. Inner Container: Has HEIGHT (Scrolls) but BORDER=FALSE (No Double Border)
+        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
                 st.info("Please select an alert to view the snapshot.")
