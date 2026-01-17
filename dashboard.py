@@ -18,12 +18,12 @@ REFRESH_SEC = 8
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
-ALERTS_SCROLL_HEIGHT_PX = 520
+ALERTS_SCROLL_HEIGHT_PX = 520  # DO NOT increase card height, only scroll area
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (ONE card per feature + darker KPI text + Row1/Row2 inner borders removed)
+# CSS (Row1+Row2: ONLY 1 outer border, kill nested borders; Row3+Row4 unchanged)
 # =========================
 st.markdown(
     """
@@ -32,28 +32,41 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .stApp{background:#f7f4ef}
 .block-container{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}
 
-/* Text: readable (dark) */
+/* Text readable (dark) */
 .stApp, .stApp *{color:#0f172a !important}
 [data-testid="stCaptionContainer"] *{color:#475569 !important}
 .small-muted, small{color:#475569 !important}
 *{overflow-wrap:anywhere;word-break:break-word}
-
 .row-gap{height:18px}
 
-/* Outer border for Streamlit border cards (this is the ONE border you want) */
+/* ----- OUTER BORDER (ALL cards) ----- */
 [data-testid="stVerticalBlockBorderWrapper"]{
   background:#faf7f2 !important;
-  border:1.4px solid rgba(15,23,42,.28) !important;
+  border:1.6px solid rgba(15,23,42,.32) !important;
   border-radius:18px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
   padding:14px !important;
   margin:0 !important;
   overflow:hidden !important;
 }
-[data-testid="stVerticalBlockBorderWrapper"] > div{
-  background:transparent !important;
+
+/* IMPORTANT: Row1+Row2 are the FIRST 6 bordered containers on the page.
+   They are getting nested bordered wrappers (double borders).
+   So we KILL any nested border wrappers inside the first 6 ONLY. */
+[data-testid="stVerticalBlockBorderWrapper"]:nth-of-type(-n+6) [data-testid="stVerticalBlockBorderWrapper"]{
   border:none !important;
   box-shadow:none !important;
+  background:transparent !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:0 !important;
+}
+
+/* Also kill the nested wrapper's inner child styling */
+[data-testid="stVerticalBlockBorderWrapper"]:nth-of-type(-n+6) [data-testid="stVerticalBlockBorderWrapper"] > div{
+  border:none !important;
+  box-shadow:none !important;
+  background:transparent !important;
   padding:0 !important;
   margin:0 !important;
 }
@@ -95,14 +108,8 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .badge-crit{background:#ffe4e6 !important;color:#9f1239 !important}
 .badge-time{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(15,23,42,.10) !important}
 
-/* ========= ROW 2: remove INNER borders (only outer feature border remains) ========= */
-.thumb{
-  border:none !important;          /* removed inner border */
-  border-radius:16px;
-  overflow:hidden;
-  background:transparent !important; /* no extra boxed look */
-  position:relative
-}
+/* Thumbnail (no extra inner border) */
+.thumb{border:none !important;border-radius:16px;overflow:hidden;background:transparent !important;position:relative}
 .thumb img{display:block;width:100%;height:220px;object-fit:cover}
 .overlay{position:absolute;left:10px;top:10px;display:flex;gap:8px}
 .ov-pill{
@@ -374,7 +381,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (ONLY outer border from st.container)
+# ROW 1: KPI
 # =========================
 k1, k2, k3 = st.columns(3)
 
@@ -423,7 +430,7 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: Camera + Active Alerts + Picture (ONLY outer border on each feature)
+# ROW 2: Camera + Alerts + Picture (scroll stays)
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
@@ -478,6 +485,7 @@ with left:
                 st.session_state.selected_alert_uid = uid
 
 def render_alert_list(data):
+    # keeps the SAME height and scrolls inside (no card height increase)
     with st.container(height=ALERTS_SCROLL_HEIGHT_PX):
         if len(data) == 0:
             st.info("No alerts.")
@@ -495,7 +503,6 @@ def render_alert_list(data):
             dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
             ago_txt = time_ago(r["ts"], now)
 
-            # INNER BORDER REMOVED HERE (only outer feature card has border)
             st.markdown(
                 f"""
                 <div style="padding:12px;border-radius:16px;background:#ffffff;margin-bottom:10px">
