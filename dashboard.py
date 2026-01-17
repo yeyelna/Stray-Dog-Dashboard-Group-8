@@ -25,7 +25,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Adjusted for Separation)
+# CSS (Adjusted for VISIBLE BORDERS)
 # =========================
 st.markdown(
     f"""
@@ -40,19 +40,19 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* ====== OUTER CARD STYLE ====== */
+/* ====== OUTER CARD STYLE (Visible Border) ====== */
 /* This targets the Main Cards (border=True) */
 [data-testid="stVerticalBlockBorderWrapper"]{{
-  background:#ffffff !important; /* Pure White Card for separation */
-  border: 1px solid #cbd5e1 !important; /* Visible Grey Border */
+  background-color: #ffffff !important; /* White Card to pop against beige bg */
+  border: 1.5px solid #475569 !important; /* Darker Border for visibility */
   border-radius: 16px !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; /* Drop Shadow */
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
   padding: 16px !important;
-  margin-bottom: 16px !important;
+  margin-bottom: 1rem !important;
 }}
 
 /* ====== REMOVE DOUBLE BORDER ====== */
-/* If a border wrapper is inside another border wrapper, remove the inner border */
+/* If a border wrapper is inside another border wrapper (like the scroll box), remove the inner border */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
@@ -63,11 +63,11 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 /* Header Bar */
 .headerbar{{
   background:#ffffff;
-  border:1px solid #cbd5e1;
+  border: 1.5px solid #475569; /* Match card border */
   border-radius:16px;
-  box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow:0 4px 6px rgba(0,0,0,0.05);
   padding:14px 16px;
-  margin-bottom:20px;
+  margin-bottom:12px;
 }}
 .title{{font-size:22px;font-weight:900;margin-bottom:2px}}
 .subtitle{{font-size:13px;color:#64748b !important;margin-top:-2px}}
@@ -306,10 +306,10 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI
+# ROW 1: KPI (Separated)
 # =========================
-# Use gap="medium" to ensure cards are separated
-k1, k2, k3 = st.columns(3, gap="medium") 
+# Added gap="medium" to separate the cards
+k1, k2, k3 = st.columns(3, gap="medium")
 
 with k1:
     with st.container(border=True):
@@ -333,9 +333,9 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: FIXED TITLE + SCROLLABLE CONTENT
+# ROW 2: MAIN FEATURES (Separated)
 # =========================
-# Use gap="medium" to physically separate the columns
+# Added gap="medium" to separate the cards
 left, mid, right = st.columns([1.05, 0.95, 1.05], gap="medium")
 
 # --- LEFT (Camera) ---
@@ -345,7 +345,7 @@ with left:
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner content (fixed height, NO BORDER to prevent double border)
+        # Inner content (fixed height to align with others, NO BORDER)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
@@ -395,7 +395,7 @@ with mid:
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner Scrollable Area (border=False to prevent double border)
+        # Inner Scrollable Area (Header stays fixed above this)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
