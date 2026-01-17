@@ -23,12 +23,12 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: UNIFIED SHADOWS & CLEAN CARDS
+# CSS: VISIBLE SHADOWS & FLOATING CARDS
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
+/* 1. Global Background (Beige) */
 html, body, [class*="css"] {{
     font-family: 'Inter', sans-serif;
 }}
@@ -41,25 +41,29 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. CARD STYLE: WHITE BOX + UNIFIED SHADOW */
-/* Targets all st.container(border=True) elements */
+/* 2. CARD STYLE: WHITE BOX + STRONG SHADOW */
+/* Targets specific st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: none !important; 
-    border-radius: 12px !important; /* Matched to Header */
+    border: none !important; /* No visible border line */
+    border-radius: 12px !important;
     
-    /* EXACT SAME SHADOW AS HEADER */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    /* STRONG SHADOW - Made darker (0.2 opacity) and larger spread */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2) !important;
+    
+    /* CRITICAL: Ensure shadow isn't clipped */
+    overflow: visible !important;
+    z-index: 1 !important;
     
     padding: 20px !important;
     margin-bottom: 0px !important; 
 }}
 
 /* 3. CLEAN UP INNER CONTENT */
+/* Prevents double shadows on internal elements */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
-    border: none !important;
     box-shadow: none !important;
-    background: transparent !important;
+    overflow: hidden !important; /* Inner content can be clipped */
     padding: 0 !important;
 }}
 
@@ -72,12 +76,11 @@ html, body, [class*="css"] {{
     margin-bottom: 30px;
     padding: 20px;
     background-color: #ffffff;
-    /* This one has the color strip */
-    border-left: 6px solid #2563eb; 
+    border-left: 6px solid #2563eb;
     border-radius: 12px;
-    
-    /* Same shadow as cards */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* Same strong shadow */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); 
+    overflow: visible;
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
@@ -409,15 +412,12 @@ with right:
                 conf = sel[col_conf]
                 conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
 
-                st.markdown(
-                    f"""
-                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-                      <div style="font-weight:900">{str(sel[col_id])}</div>
-                      <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                st.markdown(f"""
+                <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:18px; font-weight:900;">{str(sel[col_id])}</span>
+                    <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                </div>
+                """, unsafe_allow_html=True)
 
                 img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
                 if img_ok:
