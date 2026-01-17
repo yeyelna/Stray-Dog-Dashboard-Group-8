@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # =========================
 # CONFIG
 # =========================
-st.set_page_config(page_title="Smart City Stray Dog Control", layout="wide")
+st.set_page_config(page_title="Smart City Stray Dog Detection System", layout="wide")
 TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
@@ -276,7 +276,7 @@ hp_yday = int(yday_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]
 st.markdown(
     f"""
     <div class="header-area">
-        <div class="main-title">🐕 Smart City Stray Dog Control</div>
+        <div class="main-title">🐕 Smart City Stray Dog Detection System</div>
         <div style="font-size:16px; color:#3b2303;">Real-Time AI Detection Monitoring</div>
     </div>
     """,
