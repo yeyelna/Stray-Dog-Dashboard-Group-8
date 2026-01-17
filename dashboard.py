@@ -22,95 +22,97 @@ SCROLL_AREA_HEIGHT = 440
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: CARD SEPARATION & BORDERS
+# CSS: BORDER JELAS & TEKS GELAP (FIX)
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Main Background: Light Gray for contrast */
+/* 1. Paksa Background App jadi Kelabu Cair (supaya kad putih nampak jelas) */
 .stApp {{
-    background-color: #f1f5f9;
+    background-color: #f1f5f9 !important;
 }}
 
-/* 2. CARD STYLING (The Outer Container) */
-/* This gives every 'border=True' container a distinct look */
+/* 2. TEKS HITAM/GELAP (Wajib) */
+/* Paksa semua teks dalam app jadi warna gelap */
+.stApp, .stApp p, .stApp div, .stApp span, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp label, .stApp small {{
+    color: #0f172a !important; /* Warna biru gelap hampir hitam */
+}}
+/* Teks secondary (caption) warna kelabu sikit tapi masih gelap */
+[data-testid="stCaptionContainer"] *, .small-muted {{
+    color: #475569 !important;
+}}
+
+/* 3. BORDER UNTUK KAD (Outer Container) */
+/* Ini setting untuk st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: #ffffff !important;
-    border: 2px solid #cbd5e1 !important;  /* VISIBLE SEPARATOR BORDER */
-    border-radius: 16px !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important; /* SHADOW */
+    background-color: #ffffff !important;   /* Kad Warna Putih */
+    border: 2px solid #94a3b8 !important;   /* BORDER TEBAL WARNA KELABU (VISIBLE) */
+    border-radius: 12px !important;         /* Bucu bulat sikit */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important; /* Shadow sikit */
     padding: 20px !important;
     margin-bottom: 20px !important;
 }}
 
-/* 3. Nested Containers Logic */
-/* If a card is inside another card, remove its border so we don't get double lines */
+/* 4. BUANG BORDER DALAM (Supaya tak jadi kotak dalam kotak) */
+/* Jika ada container border di dalam container border lain, buang border dia */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: transparent !important;
     border: none !important;
     box-shadow: none !important;
+    background: transparent !important;
     padding: 0 !important;
-    margin: 0 !important;
 }}
 
-/* 4. Headers Text Color */
-[data-testid="stVerticalBlockBorderWrapper"] h1,
-[data-testid="stVerticalBlockBorderWrapper"] h2,
-[data-testid="stVerticalBlockBorderWrapper"] h3 {{
-    color: #0f172a !important;
-}}
-
-/* 5. Big Title */
-.title-container {{
-    border-left: 8px solid #3b82f6;
-    padding-left: 20px;
-    margin-bottom: 30px;
+/* 5. Header Bar Style */
+.headerbar {{
+    background: #ffffff;
+    border: 2px solid #94a3b8;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }}
 .big-title {{
-    font-size: 40px !important;
+    font-size: 32px !important;
     font-weight: 900 !important;
     color: #0f172a !important;
-    line-height: 1.2;
+}}
+.subtitle {{
+    font-size: 16px !important;
+    color: #475569 !important;
 }}
 
-/* 6. Bright Action Buttons */
+/* 6. Button 'Bright' */
 .stButton > button {{
-    background-color: #2563eb !important;
-    color: #ffffff !important;
-    border-radius: 8px !important;
-    border: none !important;
+    background-color: #2563eb !important; /* Biru terang */
+    color: #ffffff !important;            /* Teks putih */
+    border: 1px solid #1d4ed8 !important;
     font-weight: 700 !important;
 }}
 .stButton > button:hover {{
     background-color: #1d4ed8 !important;
 }}
 
-/* Thumbnails & Lists */
-.thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
-.thumb img {{ width: 100%; height: 220px; object-fit: cover; display: block; }}
-.list-item {{
-    padding: 12px;
+/* Badge Styles */
+.sev-badge {{ padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); }}
+.sev-low {{ background: #dbeafe; color: #1e40af !important; }}
+.sev-med {{ background: #fef3c7; color: #92400e !important; }}
+.sev-high {{ background: #ffedd5; color: #9a3412 !important; }}
+.sev-crit {{ background: #ffe4e6; color: #9f1239 !important; }}
+
+/* Thumbnails */
+.thumb {{ 
+    border: 1px solid #cbd5e1; 
+    border-radius: 10px; 
+    overflow: hidden;
     background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    margin-bottom: 10px;
 }}
-
-/* KPI & Badges */
-.kpi-val {{ font-size: 38px; font-weight: 900; color: #0f172a; }}
-.sev-badge {{ padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }}
-.sev-low {{ background: #dbeafe; color: #1e40af; }}
-.sev-med {{ background: #fef3c7; color: #92400e; }}
-.sev-high {{ background: #ffedd5; color: #9a3412; }}
-.sev-crit {{ background: #ffe4e6; color: #9f1239; }}
-
 </style>
 """,
     unsafe_allow_html=True,
 )
 
 # =========================
-# DATA & HELPERS
+# HELPERS
 # =========================
 def _clean_cols(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -252,63 +254,64 @@ hp_today = int(today_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL
 # =========================
 st.markdown(
     f"""
-    <div class="title-container">
+    <div class="headerbar">
         <div class="big-title">🐕 Smart City Stray Dog Control</div>
-        <div style="font-size:18px; color:#64748b; font-weight:500;">Real-Time AI Detection & Monitoring Dashboard</div>
+        <div class="subtitle">Real-Time AI Detection & Monitoring Dashboard</div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 # =========================
-# ROW 1: KPI (Separated Cards)
+# ROW 1: KPI (ADA BORDER)
 # =========================
-k1, k2, k3 = st.columns(3, gap="large") # gap="large" forces spacing
+k1, k2, k3 = st.columns(3, gap="large") 
 
 with k1:
-    with st.container(border=True):
+    with st.container(border=True): # Outer border
         st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-size:28px">⛔</span>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:30px">⛔</span>
             <span class="sev-badge sev-low">ALERTS</span>
         </div>
-        <div class="kpi-val">{new_today}</div>
-        <div style="font-size:14px; color:#64748b; font-weight:700;">NEW ALERTS TODAY</div>
+        <div style="font-size:38px; font-weight:900; margin-top:5px;">{new_today}</div>
+        <div style="font-weight:700; color:#475569;">NEW ALERTS TODAY</div>
         """, unsafe_allow_html=True)
 
 with k2:
     with st.container(border=True):
         st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-size:28px">📊</span>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:30px">📊</span>
             <span class="sev-badge sev-med">COUNT</span>
         </div>
-        <div class="kpi-val">{dogs_today}</div>
-        <div style="font-size:14px; color:#64748b; font-weight:700;">TOTAL DOGS DETECTED</div>
+        <div style="font-size:38px; font-weight:900; margin-top:5px;">{dogs_today}</div>
+        <div style="font-weight:700; color:#475569;">TOTAL DOGS DETECTED</div>
         """, unsafe_allow_html=True)
 
 with k3:
     with st.container(border=True):
         st.markdown(f"""
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-size:28px">🚨</span>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:30px">🚨</span>
             <span class="sev-badge sev-crit">RISK</span>
         </div>
-        <div class="kpi-val">{hp_today}</div>
-        <div style="font-size:14px; color:#64748b; font-weight:700;">HIGH PRIORITY</div>
+        <div style="font-size:38px; font-weight:900; margin-top:5px;">{hp_today}</div>
+        <div style="font-weight:700; color:#475569;">HIGH PRIORITY</div>
         """, unsafe_allow_html=True)
 
 # =========================
-# ROW 2: MAIN FEATURES (Separated Cards)
+# ROW 2: MAIN FEATURES (ADA BORDER)
 # =========================
 left, mid, right = st.columns([1, 1, 1], gap="large")
 
-# --- CARD 1 ---
+# --- CARD 1: CAMERA ---
 with left:
-    with st.container(border=True):
+    with st.container(border=True): # Border Luar Jelas
         st.subheader("📷 Camera Feed")
         st.caption("Live monitoring view")
         
+        # Scroll dalam tanpa border
         with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No data.")
@@ -321,28 +324,29 @@ with left:
                 if img_ok:
                     st.markdown(f"""
                     <div class="thumb">
-                        <img src="{str(r[col_img])}" />
+                        <img src="{str(r[col_img])}" style="width:100%; height:220px; object-fit:cover; display:block;" />
                         <div style="position:absolute; top:10px; left:10px;">
-                           <span style="background:#22c55e; color:white; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">LIVE</span>
+                           <span style="background:#22c55e; color:white !important; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:800;">LIVE</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;color:#94a3b8">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;color:#94a3b8; background:#f1f5f9;">No Image</div>""", unsafe_allow_html=True)
                 
-                st.markdown(f"<div style='margin-top:10px; font-weight:700;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='color:#64748b; font-size:13px;'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
-                st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='margin-top:12px; font-weight:700; font-size:16px;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='color:#475569; font-size:13px;'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
                 
                 if st.button("Analyze This Detection", key=f"sel_{uid}"):
                     st.session_state.selected_alert_uid = uid
 
-# --- CARD 2 ---
+# --- CARD 2: ALERTS LIST ---
 with mid:
-    with st.container(border=True):
+    with st.container(border=True): # Border Luar Jelas
         st.subheader("⛔ Active Alerts")
         st.caption("Real-time detections list")
 
+        # Scroll dalam tanpa border
         with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
@@ -354,14 +358,14 @@ with mid:
                     sev_class, sev_txt = severity_badge(r[col_sev])
                     
                     st.markdown(f"""
-                    <div class="list-item">
+                    <div style="padding:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                            <span style="font-weight:800; font-size:15px;">{int(r[col_dogs])} Dog(s) Detected</span>
+                            <span style="font-weight:800; font-size:15px; color:#0f172a;">{int(r[col_dogs])} Dog(s) Detected</span>
                             <span class="{sev_class}">{sev_txt}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="color:#64748b; font-size:13px;">{str(r[col_loc])}</span>
-                            <span style="font-size:11px; color:#64748b;">{time_ago(r["ts"], now)}</span>
+                            <span style="color:#475569; font-size:13px;">{str(r[col_loc])}</span>
+                            <span style="font-size:11px; color:#475569; font-weight:600;">{time_ago(r["ts"], now)}</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
@@ -369,12 +373,13 @@ with mid:
                     if st.button(f"View Details ({str(r[col_id])})", key=f"btn_{uid}"):
                         st.session_state.selected_alert_uid = uid
 
-# --- CARD 3 ---
+# --- CARD 3: DETAILS ---
 with right:
-    with st.container(border=True):
+    with st.container(border=True): # Border Luar Jelas
         st.subheader("🖼️ Event Details")
         st.caption("Selected alert analysis")
 
+        # Scroll dalam tanpa border
         with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
@@ -384,7 +389,7 @@ with right:
                 
                 st.markdown(f"""
                 <div style="margin-bottom:15px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:20px; font-weight:900;">{str(sel[col_id])}</span>
+                    <span style="font-size:20px; font-weight:900; color:#0f172a;">{str(sel[col_id])}</span>
                     <span class="{sev_class}">{sev_txt}</span>
                 </div>
                 """, unsafe_allow_html=True)
@@ -393,7 +398,7 @@ with right:
                 if img_ok:
                     st.image(str(sel[col_img]), use_container_width=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8; background:#f1f5f9;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown("---")
                 st.markdown(f"**📍 Location:** {str(sel[col_loc])}")
@@ -402,7 +407,7 @@ with right:
                 st.markdown(f"**🎯 Confidence:** {sel.get(col_conf, 0)}%")
 
 # =========================
-# ROW 3: TRENDS
+# ROW 3: TRENDS (ADA BORDER)
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -417,7 +422,7 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections", line=dict(color='#2563eb', width=3)))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs", line=dict(color='#f59e0b', width=3)))
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#0f172a'))
         st.plotly_chart(fig, use_container_width=True)
 
     elif mode == "7 Days":
@@ -428,7 +433,7 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections", marker_color='#2563eb'))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs", marker_color='#f59e0b'))
-        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#0f172a'))
         st.plotly_chart(fig, use_container_width=True)
 
     else:
@@ -437,11 +442,11 @@ with st.container(border=True):
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6, marker=dict(colors=['#991b1b', '#9a3412', '#92400e', '#1d4ed8']))])
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)')
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#0f172a'))
         st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# ROW 4: RECENT
+# ROW 4: RECENT (ADA BORDER)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
