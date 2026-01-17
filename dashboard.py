@@ -18,7 +18,8 @@ REFRESH_SEC = 8
 # Constants
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
-SCROLL_AREA_HEIGHT = 420  
+# FIXED: Variable name matches usage below
+SCROLLABLE_AREA_HEIGHT = 420  
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
@@ -31,6 +32,11 @@ st.markdown(
 /* 1. FORCE BEIGE BACKGROUND FOR THE WHOLE APP */
 .stApp {{
     background-color: #f7f4ef !important;
+}}
+.block-container {{
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
 }}
 
 /* 2. CARD STYLE: Targets specific st.container(border=True) */
@@ -64,7 +70,6 @@ st.markdown(
     background: #ffffff;
     border-left: 6px solid #2563eb;
     border-radius: 8px;
-    /* No border around the whole header, just a clean title block */
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
@@ -147,15 +152,6 @@ def pct_change(today_val, yday_val):
     if yday_val == 0: return 0.0 if today_val == 0 else 100.0
     return ((today_val - yday_val) / yday_val) * 100.0
 
-def compute_peak_2hr(hourly_dogs_dict):
-    arr = np.zeros(24)
-    for h in range(24): arr[h] = hourly_dogs_dict.get(h, 0)
-    best_h, best_sum = 0, -1
-    for h in range(24):
-        s = arr[h] + arr[(h + 1) % 24]
-        if s > best_sum: best_sum, best_h = s, h
-    return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
-
 def time_ago(ts: datetime, now_: datetime) -> str:
     secs = int(max(0, (now_ - ts).total_seconds()))
     if secs < 60: return "just now"
@@ -185,7 +181,7 @@ col_camtype = pick_col(raw, ["camera_type", "type"])
 col_dogs = pick_col(raw, ["dogs", "dog_count", "num_dogs"])
 col_conf = pick_col(raw, ["confidence", "conf", "score"])
 col_sev = pick_col(raw, ["severity", "priority", "level"])
-col_status = pick_col(raw, ["status", "alert_status"]) 
+col_status = pick_col(raw, ["status", "alert_status"])
 img_candidates = [c for c in raw.columns if ("url" in c or "image" in c or "snapshot" in c or "photo" in c)]
 col_img = pick_col(raw, ["snapshot_url", "image_url", "url"]) or (img_candidates[0] if img_candidates else None)
 
@@ -195,7 +191,6 @@ df = raw.copy()
 df["ts"] = df[col_ts].apply(parse_ts)
 df = df.dropna(subset=["ts"]).copy()
 
-# Fill Defaults
 if col_id is None: df["detection_id"] = ["DET-" + str(i).zfill(6) for i in range(1, len(df) + 1)]; col_id = "detection_id"
 if col_cam is None: df["camera"] = SINGLE_CAMERA_NAME; col_cam = "camera"
 if col_camtype is None: df["camera_type"] = SINGLE_CAMERA_NAME; col_camtype = "camera_type"
@@ -218,7 +213,6 @@ df["date_local"] = df["ts"].dt.date
 df["hour"] = df["ts"].dt.hour
 df_sorted = df.sort_values("ts", ascending=False).reset_index(drop=True)
 
-# State
 def row_uid(r): return f"{str(r[col_id])}__{r['ts'].isoformat()}"
 if "selected_alert_uid" not in st.session_state: st.session_state.selected_alert_uid = ""
 if st.session_state.selected_alert_uid == "" and len(df_sorted) > 0:
@@ -231,7 +225,6 @@ def get_selected_row():
     if m.sum() == 0: return None
     return df_sorted[m].iloc[0]
 
-# Metrics
 now = datetime.now(TZ)
 today = now.date()
 yday = (now - timedelta(days=1)).date()
@@ -257,12 +250,11 @@ st.markdown(
 # =========================
 # ROW 1: THE 3 KPI CARDS (SEPARATED)
 # =========================
-# Using gap="large" ensures the cards don't touch
 k1, k2, k3 = st.columns(3, gap="large")
 
 # CARD 1: NEW ALERTS
 with k1:
-    with st.container(border=True): # <--- SEPARATE BORDER HERE
+    with st.container(border=True): # <--- Explicit individual border
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">⛔</div>
@@ -274,7 +266,7 @@ with k1:
 
 # CARD 2: TOTAL DOGS
 with k2:
-    with st.container(border=True): # <--- SEPARATE BORDER HERE
+    with st.container(border=True): # <--- Explicit individual border
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">📊</div>
@@ -286,7 +278,7 @@ with k2:
 
 # CARD 3: HIGH PRIORITY
 with k3:
-    with st.container(border=True): # <--- SEPARATE BORDER HERE
+    with st.container(border=True): # <--- Explicit individual border
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">🚨</div>
@@ -305,7 +297,7 @@ left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4: CAMERA FEED ---
 with left:
-    with st.container(border=True): # <--- SEPARATE BORDER HERE
+    with st.container(border=True): # <--- Explicit individual border
         st.subheader("📷 Camera Feed")
         st.caption("Live monitoring")
         
@@ -340,7 +332,7 @@ with left:
 
 # --- CARD 5: ACTIVE ALERTS ---
 with mid:
-    with st.container(border=True): # <--- SEPARATE BORDER HERE
+    with st.container(border=True): # <--- Explicit individual border
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -373,7 +365,7 @@ with mid:
 
 # --- CARD 6: EVENT PICTURE ---
 with right:
-    with st.container(border=True): # <--- SEPARATE BORDER HERE
+    with st.container(border=True): # <--- Explicit individual border
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
@@ -411,7 +403,6 @@ st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 with st.container(border=True):
     st.subheader("📈 Detection Trends")
-    # (Simplified charts code for brevity, structure remains)
     st.info("Analytics charts display here...")
 
 with st.container(border=True):
