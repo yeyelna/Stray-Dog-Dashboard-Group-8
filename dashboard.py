@@ -10,7 +10,7 @@ from streamlit_autorefresh import st_autorefresh
 # =========================
 # CONFIG
 # =========================
-st.set_page_config(page_title="Smart City Stray Dog Detection System", layout="wide")
+st.set_page_config(page_title="Smart City Stray Dog Control", layout="wide")
 TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
@@ -23,12 +23,15 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: TARGETED CARD SHAPES
+# CSS: CLEAN FLOATING PANELS (NO BORDERS)
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
+/* 1. Global Background (Beige) */
+html, body, [class*="css"] {{
+    font-family: 'Inter', sans-serif;
+}}
 .stApp {{
     background-color: #f7f4ef !important;
 }}
@@ -38,21 +41,25 @@ st.markdown(
     max-width: 1400px;
 }}
 
-/* 2. THE CUSTOM SHAPE (Applied via Python helper) */
-/* We target the specific border wrappers that we will create */
+/* 2. CARD STYLE: REMOVED THE "BOX" (Border) */
+/* Targets specific st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: transparent !important;
-    border: 1px solid #804e08 !important; /* YOUR BROWN BORDER */
-    border-radius: 12px !important;
-    box-shadow: none !important;
-    padding: 16px !important;
-    margin-bottom: 0px !important;
+    background-color: #ffffff !important; /* Keep white bg for readability */
+    border: none !important;  /* <--- REMOVED THE BOX LINE */
+    border-radius: 16px !important;
+    
+    /* Soft shadow only, to separate from background without a box line */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05) !important;
+    
+    padding: 20px !important;
+    margin-bottom: 0px !important; 
 }}
 
 /* 3. CLEAN UP INNER CONTENT */
-/* Ensure inner elements don't get double borders */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
     padding: 0 !important;
 }}
 
@@ -63,31 +70,37 @@ st.markdown(
 /* 5. Header Title Area */
 .header-area {{
     margin-bottom: 30px;
-    padding: 15px;
-    border-left: 6px solid #804e08; 
+    padding: 10px 0;
+    /* No border box here either */
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
 /* 6. Buttons */
 .stButton > button {{
     width: 100%;
-    border: 1px solid #804e08 !important;
-    background: transparent !important;
-    color: #804e08 !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
     font-weight: 700;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }}
 .stButton > button:hover {{
-    background: #fdfae8 !important;
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
 }}
 
 /* 7. Thumbnails */
 .thumb {{
-    border: 1px solid #804e08;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
+    /* No border here either, just image */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
-.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); }}
+
+/* 8. Badges */
+.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
 </style>
 """,
     unsafe_allow_html=True,
@@ -142,6 +155,15 @@ def severity_badge(sev):
 def pct_change(today_val, yday_val):
     if yday_val == 0: return 0.0 if today_val == 0 else 100.0
     return ((today_val - yday_val) / yday_val) * 100.0
+
+def compute_peak_2hr(hourly_dogs_dict):
+    arr = np.zeros(24)
+    for h in range(24): arr[h] = hourly_dogs_dict.get(h, 0)
+    best_h, best_sum = 0, -1
+    for h in range(24):
+        s = arr[h] + arr[(h + 1) % 24]
+        if s > best_sum: best_sum, best_h = s, h
+    return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
 
 def time_ago(ts: datetime, now_: datetime) -> str:
     secs = int(max(0, (now_ - ts).total_seconds()))
@@ -239,7 +261,7 @@ hp_yday = int(yday_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]
 st.markdown(
     f"""
     <div class="header-area">
-        <div class="main-title">🐕 Smart City Stray Dog Detection System</div>
+        <div class="main-title">🐕 Smart City Stray Dog Control</div>
         <div style="font-size:16px; color:#475569;">Real-Time AI Detection Monitoring</div>
     </div>
     """,
@@ -247,7 +269,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (INDIVIDUAL SHAPES)
+# ROW 1: 3 KPI CARDS (CLEAN, NO BORDER BOX)
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
@@ -290,7 +312,7 @@ with k3:
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (INDIVIDUAL SHAPES)
+# ROW 2: 3 FEATURE CARDS (CLEAN, NO BORDER BOX)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
@@ -319,7 +341,7 @@ with left:
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:transparent;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown(f"<div style='margin-top:10px; font-weight:bold;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='small-muted'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
@@ -345,7 +367,7 @@ with mid:
                     cls, sev_txt, bg, col = severity_badge(r[col_sev])
                     
                     st.markdown(f"""
-                    <div style="padding:12px; background:rgba(255,255,255,0.6); border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
+                    <div style="padding:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                             <span style="font-weight:bold; font-size:15px;">{int(r[col_dogs])} Dog(s)</span>
                             <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
@@ -387,7 +409,7 @@ with right:
                 if img_ok:
                     st.image(str(sel[col_img]), use_container_width=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:transparent;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown("---")
                 st.markdown(f"**Loc:** {str(sel[col_loc])}")
@@ -414,9 +436,8 @@ with st.container(border=True):
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
         
-        # FIXED: Forces black text and lines
         fig.update_layout(
-            template="plotly_white",
+            template="plotly_white", 
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
@@ -471,7 +492,7 @@ with st.container(border=True):
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS
+# ROW 4: RECENT EVENTS (STYLED NATIVE DATAFRAME)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -487,6 +508,7 @@ with st.container(border=True):
         "—"
     )
     
+    # Force Pandas Styler to output black text on white bg
     def highlight_sev(val):
         color = 'black'
         return f'color: {color}'
