@@ -502,3 +502,4 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     st.dataframe(show, use_container_width=True, height=380)
+
