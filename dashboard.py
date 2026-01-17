@@ -63,15 +63,15 @@ html, body, [class*="css"] {{
 }}
 
 /* 4. Text & Headers */
-.stApp, .stApp * {{ color: #3b2303 !important; }}
-.small-muted {{ color: #99590f !important; }}
+.stApp, .stApp * {{ color: #0d0700 !important; }}
+.small-muted {{ color: #261603 !important; }}
 
 /* 5. Header Title Area: WHITE BOX + SHADOW */
 .header-area {{
     margin-bottom: 30px;
     padding: 20px;
     background-color: #ffffff;
-    border-left: 6px solid #2563eb;
+    border-left: 6px solid #452603;
     border-radius: 12px;
     
     /* SHADOW UNDER THE HEADER BOX */
