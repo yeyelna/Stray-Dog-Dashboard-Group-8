@@ -409,9 +409,8 @@ with right:
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: TRENDS & ANALYTICS (Restored & Styled)
+# ROW 3: TRENDS & ANALYTICS (FIXED COLORS)
 # =========================
-# Re-calculating data logic for charts which was missing in your snippet
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
     mode = st.radio("Analytics View", ["24 Hours", "7 Days", "Severity Distribution"], horizontal=True)
@@ -425,13 +424,17 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        # Force BLACK text color for axes, labels, legend
+        
+        # FORCE DARK TEXT
         fig.update_layout(
+            template="plotly_white", # Force white template (dark text)
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#0f172a') # <--- FORCE DARK TEXT
+            font=dict(color='#0f172a'),
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0'),
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0')
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -443,14 +446,18 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        # Force BLACK text color
+        
+        # FORCE DARK TEXT
         fig.update_layout(
+            template="plotly_white",
             barmode="group", 
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)', 
             plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#0f172a') # <--- FORCE DARK TEXT
+            font=dict(color='#0f172a'),
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0'),
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0')
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -460,12 +467,14 @@ with st.container(border=True):
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
-        # Force BLACK text color
+        
+        # FORCE DARK TEXT
         fig.update_layout(
+            template="plotly_white",
             margin=dict(l=10, r=10, t=10, b=10), 
             height=300, 
             paper_bgcolor='rgba(0,0,0,0)',
-            font=dict(color='#0f172a') # <--- FORCE DARK TEXT
+            font=dict(color='#0f172a')
         )
         st.plotly_chart(fig, use_container_width=True)
 
