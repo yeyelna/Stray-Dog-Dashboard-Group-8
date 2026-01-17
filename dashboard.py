@@ -135,21 +135,6 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
   background:#f8fafc !important;
   border-color:rgba(30,41,59,.30) !important;
 }}
-
-/* ===== ROW 2: FORCE SAME OUTER HEIGHT (no nested height container) ===== */
-/* We tag each row2 card with an ID and then force the border wrapper height */
-[data-testid="stVerticalBlockBorderWrapper"]:has(#row2_left),
-[data-testid="stVerticalBlockBorderWrapper"]:has(#row2_mid),
-[data-testid="stVerticalBlockBorderWrapper"]:has(#row2_right){
-  height: 560px !important;        /* must match ROW2_CARD_HEIGHT_PX */
-  overflow: hidden !important;      /* prevent whole card scrolling */
-}
-
-/* Make sure the inner alert list scroll area is the only scroll */
-[data-testid="stVerticalBlockBorderWrapper"]:has(#row2_mid) [data-testid="stVerticalBlock"]{
-  overflow: visible !important;
-}
-
 </style>
 """,
     unsafe_allow_html=True,
@@ -594,164 +579,78 @@ with right:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: SAME HEIGHT + ACTIVE ALERTS SCROLL (DO NOT INCREASE HEIGHT)
+# ROW 3: Trends (unchanged logic; keep as-is)
 # =========================
-left, mid, right = st.columns([1.05, 0.95, 1.05])
+with st.container(border=True):
+    st.subheader("📈 Detection Trends & Analytics")
+    mode = st.radio("Time Range", ["24 Hours", "7 Days", "Severity"], horizontal=True)
 
-with left:
-    with st.container(border=True):
-        st.markdown('<div id="row2_left"></div>', unsafe_allow_html=True)
+    if mode == "24 Hours":
+        start = now - timedelta(hours=24)
+        d = df_sorted[df_sorted["ts"] >= start].copy()
+        hourly = d.groupby("hour").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
+        hours = list(range(24))
+        hourly = hourly.set_index("hour").reindex(hours, fill_value=0).reset_index()
 
-        st.subheader("📷 Camera Feeds & Snapshots")
-        st.caption("Latest detection (single feed)")
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
+        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
+        fig.update_xaxes(dtick=1, tickmode="linear")
+        st.plotly_chart(fig, use_container_width=True)
 
-        if len(df_sorted) == 0:
-            st.info("No detection records.")
-        else:
-            r = df_sorted.iloc[0]
-            uid = row_uid(r)
-            ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
-            mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
-            dogs = int(r[col_dogs])
-            dog_word = "stray dog" if dogs == 1 else "stray dogs"
-            cam = str(r[col_cam])
-            loc = str(r[col_loc])
+        peak = compute_peak_2hr(hourly.set_index("hour")["dogs"].to_dict())
+        avg_daily = int(hourly["detections"].sum())
 
-            img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
-            if img_ok:
-                st.markdown(
-                    f"""
-                    <div class="thumb">
-                      <img src="{str(r[col_img])}" />
-                      <div class="overlay">
-                        <div class="ov-pill">● ONLINE</div>
-                        <div class="ov-pill ov-rec">● REC</div>
-                        <div class="ov-cam">{cam}</div>
-                      </div>
-                      <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} {dog_word}</div>
-                    </div>
-                    <div class="thumb-title">{loc}</div>
-                    <div class="thumb-sub">{cam} • {ts_txt}</div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    """
-                    <div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
-                      No Snapshot URL
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                st.markdown(f"**{loc}**")
-                st.caption(f"{cam} • {ts_txt}")
+    elif mode == "7 Days":
+        start = now - timedelta(days=7)
+        d = df_sorted[df_sorted["ts"] >= start].copy()
+        d["day"] = d["ts"].dt.date
+        daily = d.groupby("day").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
 
-            if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
-                st.session_state.selected_alert_uid = uid
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
+        fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
+        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=360)
+        st.plotly_chart(fig, use_container_width=True)
 
+        peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
+        avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
 
-def render_alert_list(data):
-    # IMPORTANT: This is the ONLY scroll container for Active Alerts
-    with st.container(height=ALERTS_SCROLL_HEIGHT_PX):
-        if len(data) == 0:
-            st.info("No alerts.")
-            return
+    else:
+        start = now - timedelta(days=7)
+        d = df_sorted[df_sorted["ts"] >= start].copy()
+        sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
+        counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
 
-        lim = min(len(data), 150)
-        for i in range(lim):
-            r = data.iloc[i]
-            uid = row_uid(r)
-            sev_class, sev_txt = severity_badge(r[col_sev])
-            conf = r[col_conf]
-            conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
-            ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
-            dogs = int(r[col_dogs])
-            dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
-            ago_txt = time_ago(r["ts"], now)
+        fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.55)])
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
+        st.plotly_chart(fig, use_container_width=True)
 
-            st.markdown(
-                f"""
-                <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.16);background:#ffffff;margin-bottom:10px">
-                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-                    <div style="min-width:0">
-                      <div style="font-weight:900">
-                        {dogs} {dog_word} Detected
-                        <span class="{sev_class}" style="margin-left:8px">{sev_txt}</span>
-                      </div>
-                      <div class="small-muted">{str(r[col_camtype])} • {str(r[col_cam])}</div>
-                      <div class="small-muted">📍 {str(r[col_loc])}</div>
-                      <div class="small-muted">🕒 {ts_txt} • 🎯 {conf_txt}</div>
-                    </div>
-                    <div style="text-align:right">
-                      <span class="badge badge-time">{ago_txt}</span>
-                    </div>
-                  </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+        peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
+        d["day"] = d["ts"].dt.date
+        daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
+        avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
 
-            if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
-                st.session_state.selected_alert_uid = uid
+    b1, b2 = st.columns(2)
+    with b1:
+        st.markdown(
+            f"<div style='text-align:center;padding:14px 0 4px 0'>"
+            f"<div class='small-muted'>Peak Hour</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{peak}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+    with b2:
+        st.markdown(
+            f"<div style='text-align:center;padding:14px 0 4px 0'>"
+            f"<div class='small-muted'>Avg Daily Detections</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
 
-
-with mid:
-    with st.container(border=True):
-        st.markdown('<div id="row2_mid"></div>', unsafe_allow_html=True)
-
-        st.subheader("⛔ Active Alerts")
-        st.caption("Scroll to view older detections")
-
-        # This now scrolls correctly INSIDE the fixed card height
-        render_alert_list(df_sorted)
-
-
-with right:
-    with st.container(border=True):
-        st.markdown('<div id="row2_right"></div>', unsafe_allow_html=True)
-
-        st.subheader("🖼️ Active Alert Picture")
-        sel = get_selected_row()
-
-        if sel is None:
-            st.info("Please select an alert to view the snapshot.")
-        else:
-            sev_class, sev_txt = severity_badge(sel[col_sev])
-            ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
-            conf = sel[col_conf]
-            conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
-
-            st.markdown(
-                f"""
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-                  <div style="font-weight:900">{str(sel[col_id])}</div>
-                  <span class="{sev_class}">{sev_txt}</span>
-                  <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
-            if img_ok:
-                st.image(str(sel[col_img]), use_container_width=True)
-            else:
-                st.markdown(
-                    """
-                    <div style="height:260px;border-radius:16px;border:1px dashed rgba(30,41,59,.25);
-                    background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
-                    No Snapshot URL in Sheet
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-            st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
-            st.markdown(f"- **Location:** {str(sel[col_loc])}")
-            st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
-            st.markdown(f"- **Confidence:** {conf_txt}")
-
+st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 4: Recent Events (scrollable log)
