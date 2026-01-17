@@ -28,7 +28,7 @@ st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 st.markdown(
     f"""
 <style>
-/* 1. Global Background - Force Beige/White */
+/* 1. Global Background */
 html, body, [class*="css"] {{
     font-family: 'Inter', sans-serif;
     background-color: #f7f4ef !important;
@@ -42,21 +42,18 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. FORCE TEXT COLOR TO BE DARK (Override System Dark Mode) */
-/* This forces all standard text elements to be dark grey/black */
+/* 2. FORCE DARK TEXT (System Override) */
 h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     color: #0f172a !important; 
 }}
-/* Specific override for Streamlit metrics to ensure numbers are dark */
 [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
     color: #0f172a !important;
 }}
-/* Muted text (slightly lighter grey but still visible) */
 .small-muted {{
     color: #334155 !important; 
 }}
 
-/* 3. EXCEPTION: Keep text white inside specific badges/buttons */
+/* 3. EXCEPTION: White text for Badges/Buttons */
 .thumb span, .sev-badge {{
     color: #ffffff !important;
 }}
@@ -96,19 +93,18 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     border-left: 6px solid #452603; border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }}
-/* Explicitly force title text color */
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
 /* 7. Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
     background: #ffffff !important; 
-    color: #0f172a !important; /* Force button text dark */
+    color: #0f172a !important;
     font-weight: 700; border-radius: 10px;
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 8. Vertical Line Separator */
+/* 8. Vertical Line Separator (Optional use) */
 .vertical-line {{
     border-left: 2px solid #9e5908;
     height: 500px;
@@ -120,7 +116,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
 
-/* 10. Table Styling (Force Dark Text) */
+/* 10. Table Styling */
 table.custom-table {{ width: 100%; border-collapse: collapse; color: #0f172a !important; font-size: 14px; }}
 table.custom-table th {{ background-color: #f1f5f9; color: #0f172a !important; padding: 10px; border-bottom: 2px solid #cbd5e1; }}
 table.custom-table td {{ padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a !important; }}
@@ -449,7 +445,13 @@ with c3:
                 st.markdown(f"**Time:** {ts_txt}")
                 st.markdown(f"**Conf:** {conf_txt}")
 
-st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+# =========================
+# SEPARATOR LINE UNDER ROW 2
+# =========================
+st.markdown(
+    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
+    unsafe_allow_html=True
+)
 
 # =========================
 # ROW 3: TRENDS & ANALYTICS
