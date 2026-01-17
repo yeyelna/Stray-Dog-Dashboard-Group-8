@@ -25,35 +25,35 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (HIGH CONTRAST BORDERS)
+# CSS (Targeting Individual Cards with Visible Borders)
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Background Color */
+/* 1. Global Background */
 html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
-.stApp{{background:#f7f4ef !important}}
+.stApp{{background:#f7f4ef}}
 .block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 
-/* 2. Text Colors */
+/* Text Colors */
 .stApp, .stApp *{{color:#0f172a !important}}
 [data-testid="stCaptionContainer"] *{{color:#64748b !important}}
 .small-muted, small{{color:#64748b !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* 3. CARD STYLE (The Visible Border) */
-/* I have made the border 2px solid and DARK GREY so it is clearly visible */
+/* ====== 2. INDIVIDUAL CARD BORDER ====== */
+/* This targets ONLY the st.container(border=True) wrappers */
 [data-testid="stVerticalBlockBorderWrapper"]{{
   background-color: #ffffff !important;
-  border: 2px solid #334155 !important; /* <--- DARK VISIBLE BORDER */
-  border-radius: 16px !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+  border: 2px solid #94a3b8 !important; /* VISIBLE GREY BORDER (2px) */
+  border-radius: 12px !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
   padding: 16px !important;
-  margin-bottom: 1rem !important;
+  margin-bottom: 16px !important; /* Space below each card */
 }}
 
-/* 4. REMOVE INNER BORDER */
-/* Prevents double borders inside the scrolling areas */
+/* ====== 3. REMOVE INNER BORDER ====== */
+/* If a border wrapper (scroll area) is INSIDE another border wrapper (card), remove its border */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{{
   border: none !important;
   box-shadow: none !important;
@@ -64,11 +64,11 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 /* Header Bar */
 .headerbar{{
   background:#ffffff;
-  border: 2px solid #334155; /* Match card border */
-  border-radius:16px;
+  border: 2px solid #94a3b8; /* Match Card Border */
+  border-radius:12px;
   box-shadow:0 4px 6px rgba(0,0,0,0.05);
   padding:14px 16px;
-  margin-bottom:12px;
+  margin-bottom:20px;
 }}
 .title{{font-size:22px;font-weight:900;margin-bottom:2px}}
 .subtitle{{font-size:13px;color:#64748b !important;margin-top:-2px}}
@@ -102,7 +102,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .badge-time{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.12) !important}}
 
 /* Thumbnails */
-.thumb{{border-radius:16px;overflow:hidden;border:1px solid #334155;background:#ffffff;position:relative}}
+.thumb{{border-radius:16px;overflow:hidden;border:1px solid rgba(30,41,59,.16);background:#ffffff;position:relative}}
 .thumb img{{display:block;width:100%;height:220px;object-fit:cover}}
 .overlay{{position:absolute;left:10px;top:10px;display:flex;gap:8px}}
 .ov-pill{{background:#16a34a;color:#ffffff !important;font-weight:900;font-size:12px;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}}
@@ -307,10 +307,10 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (Gap + Border)
+# ROW 1: KPI (GAP + BORDER)
 # =========================
-# Uses gap="medium" to separate cards
-k1, k2, k3 = st.columns(3, gap="medium")
+# Added gap="medium" to create physical space between the cards
+k1, k2, k3 = st.columns(3, gap="medium") 
 
 with k1:
     with st.container(border=True):
@@ -334,8 +334,9 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: MAIN FEATURES (Gap + Border)
+# ROW 2: MAIN CARDS (GAP + BORDER)
 # =========================
+# Added gap="medium" to force separation
 left, mid, right = st.columns([1.05, 0.95, 1.05], gap="medium")
 
 # --- LEFT (Camera) ---
@@ -344,7 +345,7 @@ with left:
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner content (NO BORDER to avoid double line)
+        # Inner content (NO BORDER on the scroll area)
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
@@ -530,9 +531,21 @@ with st.container(border=True):
 
     b1, b2 = st.columns(2)
     with b1:
-        st.markdown(f"<div style='text-align:center;padding:14px 0 4px 0'><div class='small-muted'>Peak Hour</div><div style='font-weight:900;font-size:22px;color:#0f172a !important'>{peak}</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='text-align:center;padding:14px 0 4px 0'>"
+            f"<div class='small-muted'>Peak Hour</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{peak}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
     with b2:
-        st.markdown(f"<div style='text-align:center;padding:14px 0 4px 0'><div class='small-muted'>Avg Daily Detections</div><div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='text-align:center;padding:14px 0 4px 0'>"
+            f"<div class='small-muted'>Avg Daily Detections</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
 
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
@@ -546,5 +559,9 @@ with st.container(border=True):
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
     show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
-    show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
+    show["Confidence"] = np.where(
+        pd.notna(recent[col_conf]),
+        recent[col_conf].round(0).astype(int).astype(str) + "%",
+        "—"
+    )
     st.dataframe(show, use_container_width=True, height=380)
