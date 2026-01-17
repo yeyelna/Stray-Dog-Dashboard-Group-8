@@ -19,15 +19,14 @@ REFRESH_SEC = 8
 # Single deployment assumption (1 camera + 1 location)
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
-SHOW_SINGLE_CAMERA_FEED = True
 
-# Make Active Alerts scroll INSIDE a fixed height (smaller than before)
-ACTIVE_ALERTS_SCROLL_H = 450  # <- decrease this to match left/right perceived height
+# Active Alerts scroll height (same "feel" as Recent Detection Events)
+ACTIVE_ALERTS_SCROLL_H = 380
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (remove redundant nested boxes + keep content INSIDE)
+# CSS (ONE box per feature + darker KPI text + no redundant frame)
 # =========================
 st.markdown(
     """
@@ -36,27 +35,24 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
 .stApp{background:#f7f4ef}
 .block-container{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}
 
-/* Force darker readable text */
+/* Base text */
 .stApp, .stApp *{color:#0f172a !important}
 [data-testid="stCaptionContainer"] *{color:#475569 !important}
 small, .small-muted{color:#475569 !important}
 *{overflow-wrap:anywhere;word-break:break-word}
-
-/* Spacing */
 .row-gap{height:18px}
 
-/* ===== OUTER CARD ONLY ===== */
+/* ===== ONE BOX BEHIND EACH FEATURE (border=True containers) ===== */
 [data-testid="stVerticalBlockBorderWrapper"]{
   background:#faf7f2 !important;
   border:1px solid rgba(30,41,59,.14) !important;
   border-radius:18px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
-  padding:14px !important;
-  overflow:hidden !important;     /* keep images/plots INSIDE */
+  padding:14px 14px 20px 14px !important;   /* extra bottom padding prevents cut-off */
+  overflow:hidden !important;               /* keep images/plots inside */
   margin:0 !important;
 }
-
-/* Remove any inner frame/padding that causes "double box" */
+/* Kill inner frames so no double boxes */
 [data-testid="stVerticalBlockBorderWrapper"] > div{
   background:transparent !important;
   border:none !important;
@@ -64,8 +60,6 @@ small, .small-muted{color:#475569 !important}
   padding:0 !important;
   margin:0 !important;
 }
-
-/* If any nested border wrappers appear, kill them */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"]{
   background:transparent !important;
   border:none !important;
@@ -95,7 +89,7 @@ small, .small-muted{color:#475569 !important}
 .kpi-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}
 .kpi-top{display:flex;align-items:center;justify-content:space-between}
 .kpi-val{font-size:34px;font-weight:900;margin-top:6px}
-.kpi-lab{font-size:13px;color:#475569 !important;margin-top:-2px}
+.kpi-lab{font-size:13px;color:#0f172a !important;margin-top:-2px;opacity:.85} /* DARKER than before */
 .delta{font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;display:inline-block}
 .delta-pos{background:#fee2e2 !important;color:#991b1b !important}
 .delta-neg{background:#dcfce7 !important;color:#166534 !important}
@@ -156,21 +150,18 @@ def _clean_cols(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = [str(c).strip().lower().replace(" ", "_") for c in df.columns]
     return df
 
-
 def parse_ts(x):
     if pd.isna(x):
         return pd.NaT
     s = str(x).strip()
     if s == "":
         return pd.NaT
-
     try:
         if "/" in s and ":" in s and "t" not in s.lower():
             dt = datetime.strptime(s, "%d/%m/%Y %H:%M")
             return dt.replace(tzinfo=TZ)
     except:
         pass
-
     try:
         dt = parser.isoparse(s)
         if dt.tzinfo is None:
@@ -179,19 +170,16 @@ def parse_ts(x):
     except:
         return pd.NaT
 
-
 def pick_col(df, candidates):
     for c in candidates:
         if c in df.columns:
             return c
     return None
 
-
 def coerce_int_series(s, default=1):
     x = pd.to_numeric(s, errors="coerce").fillna(default)
     x = x.clip(lower=0)
     return x.astype(int)
-
 
 def normalize_confidence(series):
     x = pd.to_numeric(series, errors="coerce")
@@ -201,7 +189,6 @@ def normalize_confidence(series):
     if med <= 1.0:
         x = x * 100.0
     return x.clip(0, 100)
-
 
 def severity_badge(sev):
     sev = str(sev).strip().upper()
@@ -215,7 +202,6 @@ def severity_badge(sev):
         return "badge badge-crit", "CRITICAL"
     return "badge badge-med", (sev if sev else "MEDIUM")
 
-
 def delta_chip(pct):
     if pct is None or np.isnan(pct):
         return '<span class="delta delta-pos">+0%</span>'
@@ -223,12 +209,10 @@ def delta_chip(pct):
         return f'<span class="delta delta-pos">+{pct:.0f}%</span>'
     return f'<span class="delta delta-neg">{pct:.0f}%</span>'
 
-
 def pct_change(today_val, yday_val):
     if yday_val == 0:
         return 0.0 if today_val == 0 else 100.0
     return ((today_val - yday_val) / yday_val) * 100.0
-
 
 def compute_peak_2hr(hourly_dogs_dict):
     arr = np.zeros(24)
@@ -240,7 +224,6 @@ def compute_peak_2hr(hourly_dogs_dict):
         if s > best_sum:
             best_sum, best_h = s, h
     return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
-
 
 def time_ago(ts: datetime, now_: datetime) -> str:
     secs = int(max(0, (now_ - ts).total_seconds()))
@@ -255,19 +238,17 @@ def time_ago(ts: datetime, now_: datetime) -> str:
     days = hrs // 24
     return f"{days} day ago" if days == 1 else f"{days} days ago"
 
-
 @st.cache_data(ttl=REFRESH_SEC, show_spinner=False)
 def load_data(url):
     df = pd.read_csv(url, dtype=str, engine="python", on_bad_lines="skip")
     return _clean_cols(df)
 
-
 @contextlib.contextmanager
 def scroll_container(height_px: int):
     """
-    Streamlit versions differ:
+    Works across Streamlit versions:
     - Newer: st.container(height=..., border=False)
-    - Older: st.container(height=...) only
+    - Older: st.container(height=...)
     """
     try:
         with st.container(height=height_px, border=False):
@@ -275,7 +256,6 @@ def scroll_container(height_px: int):
     except TypeError:
         with st.container(height=height_px):
             yield
-
 
 # =========================
 # LOAD + STANDARDIZE
@@ -293,7 +273,7 @@ col_camtype = pick_col(raw, ["camera_type", "type"])
 col_dogs = pick_col(raw, ["dogs", "dog_count", "num_dogs", "count"])
 col_conf = pick_col(raw, ["confidence", "conf", "score"])
 col_sev = pick_col(raw, ["severity", "priority", "level"])
-col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional (table only)
+col_status = pick_col(raw, ["status", "alert_status", "state"])
 
 img_candidates = [c for c in raw.columns if ("url" in c or "image" in c or "snapshot" in c or "photo" in c)]
 col_img = pick_col(raw, ["snapshot_url", "image_url", "img_url", "photo_url", "snapshot", "image", "url"]) or (
@@ -336,9 +316,7 @@ df[col_conf] = normalize_confidence(df[col_conf])
 
 if col_sev is None:
     dnum = df[col_dogs].astype(int)
-    df["severity"] = np.where(
-        dnum >= 4, "CRITICAL", np.where(dnum >= 3, "HIGH", np.where(dnum >= 2, "MEDIUM", "LOW"))
-    )
+    df["severity"] = np.where(dnum >= 4, "CRITICAL", np.where(dnum >= 3, "HIGH", np.where(dnum >= 2, "MEDIUM", "LOW")))
     col_sev = "severity"
 
 # Force single camera/location naming everywhere
@@ -411,7 +389,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI
+# ROW 1: KPI (each KPI has ONE box)
 # =========================
 k1, k2, k3 = st.columns(3)
 
@@ -461,7 +439,7 @@ st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 2: Camera + Alerts + Picture
-# (Active Alerts is capped + scrolls INSIDE the fixed height)
+# Active Alerts scrolls inside fixed height (like Recent Detection Events)
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
@@ -517,13 +495,13 @@ with left:
 
 
 def render_alert_list(data):
-    # NO extra inner "box": border=False + fixed height + scroll inside
+    # Same scrolling behavior "feel" as dataframe: fixed height scroll area
     with scroll_container(ACTIVE_ALERTS_SCROLL_H):
         if len(data) == 0:
             st.info("No alerts.")
             return
 
-        lim = min(len(data), 120)
+        lim = min(len(data), 200)
         for i in range(lim):
             r = data.iloc[i]
             uid = row_uid(r)
@@ -564,7 +542,6 @@ def render_alert_list(data):
 with mid:
     with st.container(border=True):
         st.subheader("⛔ Active Alerts")
-        # This is the ONLY part that scrolls and is capped in height
         render_alert_list(df_sorted)
 
 with right:
@@ -613,11 +590,15 @@ with right:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: Trends (NO internal scroll)
+# ROW 3: Trends (fix Peak/Avg cut-off)
+# - Reduce chart height slightly
+# - Add small spacer before metrics
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
     mode = st.radio("Time Range", ["24 Hours", "7 Days", "Severity"], horizontal=True)
+
+    CHART_H = 360  # smaller to ensure Peak/Avg never gets clipped
 
     if mode == "24 Hours":
         start = now - timedelta(hours=24)
@@ -629,7 +610,7 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=420)
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=CHART_H)
         fig.update_xaxes(dtick=1, tickmode="linear")
         st.plotly_chart(fig, use_container_width=True)
 
@@ -645,7 +626,7 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=420)
+        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=CHART_H)
         st.plotly_chart(fig, use_container_width=True)
 
         peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
@@ -658,7 +639,7 @@ with st.container(border=True):
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
 
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.55)])
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=420)
+        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=CHART_H)
         st.plotly_chart(fig, use_container_width=True)
 
         peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
@@ -666,15 +647,23 @@ with st.container(border=True):
         daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
         avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
 
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
     b1, b2 = st.columns(2)
     with b1:
         st.markdown(
-            f"<div style='text-align:center;padding-top:6px'><div class='small-muted'>Peak Hour</div><div style='font-weight:900;font-size:22px;color:#7c3aed !important'>{peak}</div></div>",
+            f"<div style='text-align:center;padding-top:6px;padding-bottom:6px'>"
+            f"<div class='small-muted'>Peak Hour</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#7c3aed !important'>{peak}</div>"
+            f"</div>",
             unsafe_allow_html=True,
         )
     with b2:
         st.markdown(
-            f"<div style='text-align:center;padding-top:6px'><div class='small-muted'>Avg Daily Detections</div><div style='font-weight:900;font-size:22px;color:#2563eb !important'>{avg_daily}</div></div>",
+            f"<div style='text-align:center;padding-top:6px;padding-bottom:6px'>"
+            f"<div class='small-muted'>Avg Daily Detections</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#2563eb !important'>{avg_daily}</div>"
+            f"</div>",
             unsafe_allow_html=True,
         )
 
