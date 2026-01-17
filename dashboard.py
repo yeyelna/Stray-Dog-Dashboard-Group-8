@@ -22,79 +22,89 @@ SCROLL_AREA_HEIGHT = 440
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: FORCE VISIBLE BORDERS
+# CSS: FLOATING CARDS + SHADOWS
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. APP BACKGROUND (Contrast color) */
+/* 1. APP BACKGROUND (Beige) */
 .stApp {{
-    background-color: #f1f5f9 !important; /* Light Grey Background */
+    background-color: #f7f4ef !important;
 }}
 
-/* 2. CARD BORDER (The specific fix) */
-/* Targets the container created by st.container(border=True) */
+/* 2. FLOATING CARD STYLE */
+/* Targets every st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: #ffffff !important;
-    border: 2px solid #334155 !important; /* DARK GREY BORDER - 2px THICK */
-    border-radius: 12px !important;
-    padding: 16px !important;
-    margin-bottom: 20px !important;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Slight Shadow */
+    background-color: #ffffff !important; /* Pure White Card */
+    border: 1px solid #e2e8f0 !important; /* Subtle Grey Border */
+    border-radius: 16px !important;       /* Rounded Corners */
+    
+    /* FLOATING SHADOW EFFECT */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+                0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    
+    padding: 24px !important;
+    margin-bottom: 24px !important;
 }}
 
-/* 3. PREVENT DOUBLE BORDERS */
-/* If a border container is inside another, remove the inner one's border */
+/* 3. PREVENT DOUBLE BORDERS/SHADOWS INSIDE CARDS */
+/* If a card is inside another card, strip its styling so it blends in */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
+    background: transparent !important;
     padding: 0 !important;
+    margin: 0 !important;
 }}
 
 /* 4. TEXT COLORS (Dark for readability) */
 .stApp, .stApp * {{
-    color: #0f172a !important; /* Dark Slate Blue Text */
+    color: #0f172a !important; /* Dark Slate */
 }}
 .small-muted {{
     color: #64748b !important;
 }}
 
-/* 5. HEADER BAR */
+/* 5. HEADER BAR (Floating too) */
 .headerbar {{
     background: #ffffff;
-    border: 2px solid #334155; /* Matches Cards */
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 20px;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); /* Subtle Shadow */
+    border-left: 8px solid #2563eb; /* Blue Accent Line */
 }}
 .big-title {{
-    font-size: 32px !important;
+    font-size: 36px !important;
     font-weight: 900 !important;
 }}
 
-/* 6. BUTTONS (Bright Blue) */
+/* 6. BUTTONS */
 .stButton > button {{
     background-color: #2563eb !important;
     color: white !important;
+    border-radius: 8px !important;
     border: none !important;
-    font-weight: bold !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2) !important;
 }}
 .stButton > button:hover {{
     background-color: #1d4ed8 !important;
+    transform: translateY(-1px);
 }}
 
 /* 7. CUSTOM BADGES */
-.sev-badge {{ padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; border: 1px solid #cbd5e1; }}
+.sev-badge {{ padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; border: 1px solid rgba(0,0,0,0.05); }}
 .sev-low {{ background: #dbeafe; color: #1e40af !important; }}
 .sev-med {{ background: #fef3c7; color: #92400e !important; }}
 .sev-high {{ background: #ffedd5; color: #9a3412 !important; }}
 .sev-crit {{ background: #ffe4e6; color: #9f1239 !important; }}
 
-/* 8. THUMBNAIL FRAME */
+/* 8. THUMBNAIL */
 .thumb {{
-    border: 1px solid #334155; /* Border around image */
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }}
 </style>
 """,
@@ -102,7 +112,7 @@ st.markdown(
 )
 
 # =========================
-# DATA & HELPERS
+# HELPERS & DATA
 # =========================
 def _clean_cols(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -253,11 +263,11 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI CARDS (BORDERED)
+# ROW 1: KPI CARDS (FLOATING)
 # =========================
 k1, k2, k3 = st.columns(3, gap="medium")
 
-# Card 1: New Alerts
+# Card 1
 with k1:
     with st.container(border=True):
         st.markdown(f"""
@@ -269,7 +279,7 @@ with k1:
         <div style="font-weight:700; color:#475569;">NEW ALERTS TODAY</div>
         """, unsafe_allow_html=True)
 
-# Card 2: Total Dogs
+# Card 2
 with k2:
     with st.container(border=True):
         st.markdown(f"""
@@ -281,7 +291,7 @@ with k2:
         <div style="font-weight:700; color:#475569;">TOTAL DOGS DETECTED</div>
         """, unsafe_allow_html=True)
 
-# Card 3: High Priority
+# Card 3
 with k3:
     with st.container(border=True):
         st.markdown(f"""
@@ -294,7 +304,7 @@ with k3:
         """, unsafe_allow_html=True)
 
 # =========================
-# ROW 2: MAIN FEATURES (BORDERED)
+# ROW 2: MAIN FEATURES (FLOATING)
 # =========================
 left, mid, right = st.columns([1, 1, 1], gap="medium")
 
@@ -304,7 +314,6 @@ with left:
         st.subheader("📷 Camera Feed")
         st.caption("Live monitoring view")
         
-        # Scrollable inner content (NO BORDER HERE to prevent double border)
         with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No data.")
@@ -324,11 +333,11 @@ with left:
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:240px;display:flex;align-items:center;justify-content:center;background:#f8fafc;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:240px;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#94a3b8;">No Image</div>""", unsafe_allow_html=True)
                 
-                st.markdown(f"<div style='margin-top:12px; font-weight:700; font-size:16px;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='margin-top:15px; font-weight:700; font-size:16px;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
                 st.markdown(f"<div style='color:#475569; font-size:13px;'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
-                st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:15px'></div>", unsafe_allow_html=True)
                 
                 if st.button("Analyze This Detection", key=f"sel_{uid}"):
                     st.session_state.selected_alert_uid = uid
@@ -350,8 +359,8 @@ with mid:
                     sev_class, sev_txt = severity_badge(r[col_sev])
                     
                     st.markdown(f"""
-                    <div style="padding:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                    <div style="padding:15px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
                             <span style="font-weight:800; font-size:15px; color:#0f172a;">{int(r[col_dogs])} Dog(s) Detected</span>
                             <span class="{sev_class}">{sev_txt}</span>
                         </div>
@@ -389,7 +398,7 @@ with right:
                 if img_ok:
                     st.image(str(sel[col_img]), use_container_width=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8; background:#f1f5f9;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;color:#94a3b8; background:#f8fafc;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown("---")
                 st.markdown(f"**📍 Location:** {str(sel[col_loc])}")
@@ -398,7 +407,7 @@ with right:
                 st.markdown(f"**🎯 Confidence:** {sel.get(col_conf, 0)}%")
 
 # =========================
-# CARD 7: TRENDS (BORDERED)
+# CARD 7: TRENDS (FLOATING)
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -437,7 +446,7 @@ with st.container(border=True):
         st.plotly_chart(fig, use_container_width=True)
 
 # =========================
-# CARD 8: RECENT EVENTS (BORDERED)
+# CARD 8: RECENT EVENTS (FLOATING)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
