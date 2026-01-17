@@ -19,119 +19,122 @@ REFRESH_SEC = 8
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
-# ROW 2 Active Alerts: scroll INSIDE fixed area (do NOT expand the card)
-ALERTS_SCROLL_HEIGHT_PX = 520
+# ROW 2: FIXED HEIGHT (ALL 3 MUST MATCH)
+ROW2_CARD_HEIGHT_PX = 560          # <-- this is the visible card height (do NOT increase)
+ROW2_HEADER_PAD_PX = 115           # reserve space for title + caption + some spacing
+ALERTS_SCROLL_HEIGHT_PX = max(260, ROW2_CARD_HEIGHT_PX - ROW2_HEADER_PAD_PX)
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Single outer border per Streamlit card in Row 1 & Row 2, and make content stay INSIDE)
+# CSS (ONE outer border per feature; Row2 equal height + inner scroll)
 # =========================
 st.markdown(
-    """
+    f"""
 <style>
-html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-.stApp{background:#f7f4ef}
-.block-container{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}
+html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
+.stApp{{background:#f7f4ef}}
+.block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 
-/* Text: readable (dark) */
-.stApp, .stApp *{color:#0f172a}
-[data-testid="stCaptionContainer"] *{color:#64748b}
-.small-muted, small{color:#64748b}
-*{overflow-wrap:anywhere;word-break:break-word}
+/* readable text */
+.stApp, .stApp *{{color:#0f172a !important}}
+[data-testid="stCaptionContainer"] *{{color:#64748b !important}}
+.small-muted, small{{color:#64748b !important}}
+*{{overflow-wrap:anywhere;word-break:break-word}}
 
-.row-gap{height:18px}
-
-/* ===== STREAMLIT BORDER CARDS: ONE CLEAN OUTER BORDER ONLY ===== */
-[data-testid="stVerticalBlockBorderWrapper"]{
+/* ====== OUTER BORDER STYLE (applies ONLY to st.container(border=True)) ====== */
+[data-testid="stVerticalBlockBorderWrapper"]{{
   background:#faf7f2 !important;
-  border:2px solid rgba(15,23,42,.30) !important;   /* darker outer border */
-  border-radius:18px !important;
+  border:1.6px solid rgba(15,23,42,.35) !important;   /* darker border */
+  border-radius:22px !important;
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
-  padding:14px !important;
-  overflow:hidden !important; /* keep images INSIDE card */
-}
-
-/* Remove inner redundant frames */
-[data-testid="stVerticalBlockBorderWrapper"] > div{
-  background:transparent !important;
+  padding:16px !important;
+  margin:0 !important;
+  overflow:hidden !important;
+}}
+/* remove any inner “extra frame” look */
+[data-testid="stVerticalBlockBorderWrapper"] > div{{
   border:none !important;
+  background:transparent !important;
   box-shadow:none !important;
   padding:0 !important;
   margin:0 !important;
-}
+}}
 
-/* HEADER */
-.headerbar{
-  background:#ffffff;border:1px solid rgba(30,41,59,.12);
-  border-radius:18px;box-shadow:0 6px 18px rgba(15,23,42,.06);
+/* header bar */
+.headerbar{{
+  background:#ffffff;border:1.6px solid rgba(15,23,42,.25);
+  border-radius:22px;box-shadow:0 6px 18px rgba(15,23,42,.06);
   padding:14px 16px;margin-bottom:12px
-}
-.title{font-size:22px;font-weight:900;margin-bottom:2px}
-.subtitle{font-size:13px;color:#64748b;margin-top:-2px}
+}}
+.title{{font-size:22px;font-weight:900;margin-bottom:2px}}
+.subtitle{{font-size:13px;color:#64748b !important;margin-top:-2px}}
 
-.pill{
+.pill{{
   display:inline-flex;align-items:center;gap:8px;
   padding:9px 12px;border-radius:14px;
-  border:1px solid rgba(30,41,59,.12);
+  border:1px solid rgba(30,41,59,.18);
   background:#ffffff;font-weight:900
-}
-.pill-green{background:#ecfdf5;border-color:#bbf7d0;color:#166534}
-.pill-yellow{background:#fffbeb;border-color:#fde68a;color:#92400e}
-.pill-red{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+}}
+.pill-green{{background:#ecfdf5 !important;border-color:#bbf7d0 !important;color:#166534 !important}}
+.pill-green *{{color:#166534 !important}}
+.pill-red{{background:#fee2e2 !important;border-color:#fecaca !important;color:#991b1b !important}}
+.pill-red *{{color:#991b1b !important}}
+
+.row-gap{{height:18px}}
 
 /* KPI */
-.kpi-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}
-.kpi-top{display:flex;align-items:center;justify-content:space-between}
-.kpi-val{font-size:34px;font-weight:900;margin-top:6px;color:#0f172a}
-.kpi-lab{font-size:13px;color:#0f172a;margin-top:-2px;font-weight:800}
-.delta{font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;display:inline-block}
-.delta-pos{background:#fee2e2;color:#991b1b}
-.delta-neg{background:#dcfce7;color:#166534}
+.kpi-ico{{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}}
+.kpi-top{{display:flex;align-items:center;justify-content:space-between}}
+.kpi-val{{font-size:34px;font-weight:900;margin-top:6px;color:#0f172a !important}}
+.kpi-lab{{font-size:13px;color:#0f172a !important;margin-top:-2px;font-weight:800}}
+.delta{{font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;display:inline-block}}
+.delta-pos{{background:#fee2e2 !important;color:#991b1b !important}}
+.delta-neg{{background:#dcfce7 !important;color:#166534 !important}}
 
 /* Badges */
-.badge{font-size:12px;font-weight:900;padding:6px 10px;border-radius:10px;display:inline-block}
-.badge-low{background:#dbeafe;color:#1d4ed8}
-.badge-med{background:#fef3c7;color:#92400e}
-.badge-high{background:#ffedd5;color:#9a3412}
-.badge-crit{background:#ffe4e6;color:#9f1239}
-.badge-time{background:#f1f5f9;color:#0f172a;border:1px solid rgba(30,41,59,.10)}
+.badge{{font-size:12px;font-weight:900;padding:6px 10px;border-radius:10px;display:inline-block}}
+.badge-low{{background:#dbeafe !important;color:#1d4ed8 !important}}
+.badge-med{{background:#fef3c7 !important;color:#92400e !important}}
+.badge-high{{background:#ffedd5 !important;color:#9a3412 !important}}
+.badge-crit{{background:#ffe4e6 !important;color:#9f1239 !important}}
+.badge-time{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.12) !important}}
 
 /* Thumbnail */
-.thumb{border-radius:16px;overflow:hidden;border:1px solid rgba(30,41,59,.12);background:#ffffff;position:relative}
-.thumb img{display:block;width:100%;height:220px;object-fit:cover}
-.overlay{position:absolute;left:10px;top:10px;display:flex;gap:8px}
-.ov-pill{
-  background:#16a34a;color:#ffffff;font-weight:900;font-size:12px;
+.thumb{{border-radius:16px;overflow:hidden;border:1px solid rgba(30,41,59,.16);background:#ffffff;position:relative}}
+.thumb img{{display:block;width:100%;height:220px;object-fit:cover}}
+.overlay{{position:absolute;left:10px;top:10px;display:flex;gap:8px}}
+.ov-pill{{
+  background:#16a34a;color:#ffffff !important;font-weight:900;font-size:12px;
   padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px
-}
-.ov-rec{background:#ef4444}
-.ov-cam{
-  background:rgba(15,23,42,.80);color:#ffffff;font-weight:900;font-size:12px;
+}}
+.ov-rec{{background:#ef4444}}
+.ov-cam{{
+  background:rgba(15,23,42,.80);color:#ffffff !important;font-weight:900;font-size:12px;
   padding:6px 10px;border-radius:10px
-}
-.ov-det{
+}}
+.ov-det{{
   position:absolute;left:10px;bottom:10px;
-  background:#f59e0b;color:#0f172a;font-weight:900;font-size:12px;
+  background:#f59e0b;color:#0f172a !important;font-weight:900;font-size:12px;
   padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px
-}
-.thumb-title{font-weight:900;margin-top:10px}
-.thumb-sub{margin-top:-2px;color:#64748b}
+}}
+.thumb-title{{font-weight:900;margin-top:10px}}
+.thumb-sub{{margin-top:-2px;color:#64748b !important}}
 
 /* Buttons */
-.stButton > button{
+.stButton > button{{
   width:100%;
-  background:#ffffff;
-  color:#0f172a;
-  border:1px solid rgba(30,41,59,.14);
-  border-radius:12px;
-  font-weight:900;
-  box-shadow:none;
-}
-.stButton > button:hover{
-  background:#f8fafc;
-  border-color:rgba(30,41,59,.22);
-}
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid rgba(30,41,59,.18) !important;
+  border-radius:12px !important;
+  font-weight:900 !important;
+  box-shadow:none !important;
+}}
+.stButton > button:hover{{
+  background:#f8fafc !important;
+  border-color:rgba(30,41,59,.30) !important;
+}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -259,7 +262,6 @@ col_dogs = pick_col(raw, ["dogs", "dog_count", "num_dogs", "count"])
 col_conf = pick_col(raw, ["confidence", "conf", "score"])
 col_sev = pick_col(raw, ["severity", "priority", "level"])
 col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional (table)
-
 img_candidates = [c for c in raw.columns if ("url" in c or "image" in c or "snapshot" in c or "photo" in c)]
 col_img = pick_col(raw, ["snapshot_url", "image_url", "img_url", "photo_url", "snapshot", "image", "url"]) or (
     img_candidates[0] if len(img_candidates) > 0 else None
@@ -301,10 +303,9 @@ df[col_conf] = normalize_confidence(df[col_conf])
 
 if col_sev is None:
     dnum = df[col_dogs].astype(int)
-    df["severity"] = np.where(
-        dnum >= 4, "CRITICAL",
-        np.where(dnum >= 3, "HIGH", np.where(dnum >= 2, "MEDIUM", "LOW"))
-    )
+    df["severity"] = np.where(dnum >= 4, "CRITICAL",
+                      np.where(dnum >= 3, "HIGH",
+                      np.where(dnum >= 2, "MEDIUM", "LOW")))
     col_sev = "severity"
 
 # Force single camera/location naming
@@ -368,7 +369,6 @@ st.markdown(
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="pill pill-green">📈 <span>System Active</span></div>
       <div class="pill pill-red">🔔 <span>{new_today} New Alerts</span></div>
     </div>
   </div>
@@ -378,7 +378,7 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (ONE OUTER BORDER ONLY PER CARD)
+# ROW 1: KPI (ONE OUTER BORDER EACH)
 # =========================
 k1, k2, k3 = st.columns(3)
 
@@ -427,62 +427,62 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: Camera + Active Alerts (scroll in fixed box) + Picture
+# ROW 2: SAME HEIGHT + ACTIVE ALERTS SCROLL (DO NOT INCREASE HEIGHT)
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
 with left:
     with st.container(border=True):
-        st.subheader("📷 Camera Feeds & Snapshots")
-        st.caption("Latest detection (single feed)")
+        with st.container(height=ROW2_CARD_HEIGHT_PX):
+            st.subheader("📷 Camera Feeds & Snapshots")
+            st.caption("Latest detection (single feed)")
 
-        if len(df_sorted) == 0:
-            st.info("No detection records.")
-        else:
-            r = df_sorted.iloc[0]
-            uid = row_uid(r)
-            ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
-            mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
-            dogs = int(r[col_dogs])
-            dog_word = "stray dog" if dogs == 1 else "stray dogs"
-            cam = str(r[col_cam])
-            loc = str(r[col_loc])
-
-            img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
-            if img_ok:
-                st.markdown(
-                    f"""
-                    <div class="thumb">
-                      <img src="{str(r[col_img])}" />
-                      <div class="overlay">
-                        <div class="ov-pill">● ONLINE</div>
-                        <div class="ov-pill ov-rec">● REC</div>
-                        <div class="ov-cam">{cam}</div>
-                      </div>
-                      <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} {dog_word}</div>
-                    </div>
-                    <div class="thumb-title">{loc}</div>
-                    <div class="thumb-sub">{cam} • {ts_txt}</div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            if len(df_sorted) == 0:
+                st.info("No detection records.")
             else:
-                st.markdown(
-                    """
-                    <div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
-                      No Snapshot URL
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                st.markdown(f"**{loc}**")
-                st.caption(f"{cam} • {ts_txt}")
+                r = df_sorted.iloc[0]
+                uid = row_uid(r)
+                ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
+                mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
+                dogs = int(r[col_dogs])
+                dog_word = "stray dog" if dogs == 1 else "stray dogs"
+                cam = str(r[col_cam])
+                loc = str(r[col_loc])
 
-            if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
-                st.session_state.selected_alert_uid = uid
+                img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
+                if img_ok:
+                    st.markdown(
+                        f"""
+                        <div class="thumb">
+                          <img src="{str(r[col_img])}" />
+                          <div class="overlay">
+                            <div class="ov-pill">● ONLINE</div>
+                            <div class="ov-pill ov-rec">● REC</div>
+                            <div class="ov-cam">{cam}</div>
+                          </div>
+                          <div class="ov-det">📸 Detection {mins_ago}m ago • {dogs} {dog_word}</div>
+                        </div>
+                        <div class="thumb-title">{loc}</div>
+                        <div class="thumb-sub">{cam} • {ts_txt}</div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        """
+                        <div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
+                          No Snapshot URL
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    st.markdown(f"**{loc}**")
+                    st.caption(f"{cam} • {ts_txt}")
+
+                if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
+                    st.session_state.selected_alert_uid = uid
 
 def render_alert_list(data):
-    # Scroll INSIDE fixed height area (DO NOT expand the card)
     with st.container(height=ALERTS_SCROLL_HEIGHT_PX):
         if len(data) == 0:
             st.info("No alerts.")
@@ -493,7 +493,6 @@ def render_alert_list(data):
             r = data.iloc[i]
             uid = row_uid(r)
             sev_class, sev_txt = severity_badge(r[col_sev])
-
             conf = r[col_conf]
             conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
             ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
@@ -503,7 +502,7 @@ def render_alert_list(data):
 
             st.markdown(
                 f"""
-                <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.12);background:#ffffff;margin-bottom:10px">
+                <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.16);background:#ffffff;margin-bottom:10px">
                   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
                     <div style="min-width:0">
                       <div style="font-weight:900">
@@ -528,57 +527,59 @@ def render_alert_list(data):
 
 with mid:
     with st.container(border=True):
-        st.subheader("⛔ Active Alerts")
-        st.caption("Scroll to view older detections")
-        render_alert_list(df_sorted)
+        with st.container(height=ROW2_CARD_HEIGHT_PX):
+            st.subheader("⛔ Active Alerts")
+            st.caption("Scroll to view older detections")
+            render_alert_list(df_sorted)
 
 with right:
     with st.container(border=True):
-        st.subheader("🖼️ Active Alert Picture")
-        sel = get_selected_row()
+        with st.container(height=ROW2_CARD_HEIGHT_PX):
+            st.subheader("🖼️ Active Alert Picture")
+            sel = get_selected_row()
 
-        if sel is None:
-            st.info("Please select an alert to view the snapshot.")
-        else:
-            sev_class, sev_txt = severity_badge(sel[col_sev])
-            ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
-            conf = sel[col_conf]
-            conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
-
-            st.markdown(
-                f"""
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-                  <div style="font-weight:900">{str(sel[col_id])}</div>
-                  <span class="{sev_class}">{sev_txt}</span>
-                  <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
-            if img_ok:
-                st.image(str(sel[col_img]), use_container_width=True)
+            if sel is None:
+                st.info("Please select an alert to view the snapshot.")
             else:
+                sev_class, sev_txt = severity_badge(sel[col_sev])
+                ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
+                conf = sel[col_conf]
+                conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
+
                 st.markdown(
-                    """
-                    <div style="height:260px;border-radius:16px;border:1px dashed rgba(30,41,59,.18);
-                    background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
-                    No Snapshot URL in Sheet
+                    f"""
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                      <div style="font-weight:900">{str(sel[col_id])}</div>
+                      <span class="{sev_class}">{sev_txt}</span>
+                      <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
-            st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
-            st.markdown(f"- **Location:** {str(sel[col_loc])}")
-            st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
-            st.markdown(f"- **Confidence:** {conf_txt}")
+                img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
+                if img_ok:
+                    st.image(str(sel[col_img]), use_container_width=True)
+                else:
+                    st.markdown(
+                        """
+                        <div style="height:260px;border-radius:16px;border:1px dashed rgba(30,41,59,.25);
+                        background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
+                        No Snapshot URL in Sheet
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
+                st.markdown(f"- **Location:** {str(sel[col_loc])}")
+                st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
+                st.markdown(f"- **Confidence:** {conf_txt}")
 
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: Trends (UNCHANGED structure)
+# ROW 3: Trends (unchanged logic; keep as-is)
 # =========================
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
@@ -636,7 +637,7 @@ with st.container(border=True):
         st.markdown(
             f"<div style='text-align:center;padding:14px 0 4px 0'>"
             f"<div class='small-muted'>Peak Hour</div>"
-            f"<div style='font-weight:900;font-size:22px;color:#0f172a'>{peak}</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{peak}</div>"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -644,7 +645,7 @@ with st.container(border=True):
         st.markdown(
             f"<div style='text-align:center;padding:14px 0 4px 0'>"
             f"<div class='small-muted'>Avg Daily Detections</div>"
-            f"<div style='font-weight:900;font-size:22px;color:#0f172a'>{avg_daily}</div>"
+            f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div>"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -652,17 +653,16 @@ with st.container(border=True):
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: Recent Events (UNCHANGED structure)
+# ROW 4: Recent Events (scrollable log)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
     st.caption("Last 50 records (scrollable)")
-
     recent = df_sorted.head(50).copy()
+
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
     show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
-
     show["Confidence"] = np.where(
         pd.notna(recent[col_conf]),
         recent[col_conf].round(0).astype(int).astype(str) + "%",
