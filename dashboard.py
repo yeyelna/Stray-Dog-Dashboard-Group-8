@@ -26,7 +26,7 @@ ALERTS_SCROLL_HEIGHT_PX = 520  # must be smaller than card height
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (ONE card per feature + darker KPI text + no redundancy)
+# CSS (REMOVE phantom boxes + ONE border box per feature)
 # =========================
 st.markdown(
     f"""
@@ -41,20 +41,54 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .small-muted, small{{color:#475569 !important}}
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* --- CARD WRAPPER (our own box) --- */
+/* ✅ KILL ALL STREAMLIT "PHANTOM" WRAPPERS / BOXES */
+[data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stVerticalBlockBorderWrapper"] > div,
+[data-testid="stVerticalBlockBorderWrapper"] > div > div {{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  margin:0 !important;
+}}
+
+div[data-testid="stElementContainer"] {{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  margin:0 !important;
+}}
+
+div[data-testid="stContainer"] {{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  margin:0 !important;
+}}
+
+div[data-testid="stMarkdownContainer"] {{
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+}}
+
+/* --- OUR CARD WRAPPER (the ONLY visible box) --- */
 .card {{
   background:#faf7f2;
-  border:1px solid rgba(30,41,59,.14);
+  border:1.5px solid rgba(15,23,42,.18);
   border-radius:18px;
   box-shadow:0 6px 18px rgba(15,23,42,.06);
   padding:14px;
   margin:0;
+  box-sizing:border-box;
 }}
 .card.row2 {{
   height:{ROW2_CARD_HEIGHT_PX}px;
 }}
-/* keep images/charts inside card spacing */
-.card img {{max-width:100%; height:auto;}}
 .row-gap{{height:18px}}
 
 /* HEADER */
@@ -83,7 +117,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .kpi-ico{{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}}
 .kpi-top{{display:flex;align-items:center;justify-content:space-between}}
 .kpi-val{{font-size:34px;font-weight:900;margin-top:6px;color:#0f172a !important}}
-.kpi-lab{{font-size:13px;color:#0f172a !important;margin-top:-2px;font-weight:700}}
+.kpi-lab{{font-size:13px;color:#0f172a !important;margin-top:-2px;font-weight:800}}
 .delta{{font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;display:inline-block}}
 .delta-pos{{background:#fee2e2 !important;color:#991b1b !important}}
 .delta-neg{{background:#dcfce7 !important;color:#166534 !important}}
@@ -488,7 +522,7 @@ with left:
     card_close()
 
 def render_alert_list(data):
-    # THIS makes it scroll inside a fixed height area (like st.dataframe(height=...))
+    # Scroll inside fixed height (works like dataframe)
     with st.container(height=ALERTS_SCROLL_HEIGHT_PX):
         if len(data) == 0:
             st.info("No alerts.")
@@ -586,7 +620,7 @@ with right:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 3: Trends (fix cut off stats)
+# ROW 3: Trends (stats never cut)
 # =========================
 card_open()
 st.subheader("📈 Detection Trends & Analytics")
@@ -602,7 +636,7 @@ if mode == "24 Hours":
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
     fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)  # smaller so stats never cut off
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
     fig.update_xaxes(dtick=1, tickmode="linear")
     st.plotly_chart(fig, use_container_width=True)
 
@@ -639,7 +673,6 @@ else:
     daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
     avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
 
-# stats row (extra padding so never cut)
 b1, b2 = st.columns(2)
 with b1:
     st.markdown(
@@ -657,7 +690,6 @@ with b2:
         f"</div>",
         unsafe_allow_html=True,
     )
-
 card_close()
 
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
