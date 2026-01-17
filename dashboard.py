@@ -17,21 +17,32 @@ REFRESH_SEC = 8
 
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
-SCROLL_AREA_HEIGHT = 440
+SCROLL_AREA_HEIGHT = 440  # Height of the scrollable content
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (Purely for Text/Badges - No Border Hacks)
+# CSS (Fixing the Double Border Issue)
 # =========================
 st.markdown(
     f"""
 <style>
-/* Global Font & Reset */
+/* Global settings */
 html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
 .stApp{{background:#f7f4ef}}
 .block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 .stApp, .stApp *{{color:#0f172a !important}}
+
+/* CRITICAL FIX: 
+   Target any container with a border (height=...) that is INSIDE another container with a border.
+   We remove the border/shadow from the INNER one so it looks like one unified card.
+*/
+[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}}
 
 /* Header Bar */
 .headerbar{{
@@ -229,7 +240,7 @@ def get_selected_row():
     if m.sum() == 0: return None
     return df_sorted[m].iloc[0]
 
-# KPI Calculations
+# Metrics
 now = datetime.now(TZ)
 today = now.date()
 yday = (now - timedelta(days=1)).date()
@@ -294,8 +305,8 @@ with left:
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner Scroll Area (Height + Border=False)
-        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
+        # Inner Scroll Area (Height + Border=False implied by CSS)
+        with st.container(height=SCROLL_AREA_HEIGHT):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
             else:
@@ -341,8 +352,8 @@ with mid:
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner Scroll Area (Height + Border=False)
-        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
+        # Inner Scroll Area (Height + Border=False implied by CSS)
+        with st.container(height=SCROLL_AREA_HEIGHT):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
             else:
@@ -389,8 +400,8 @@ with right:
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner Scroll Area (Height + Border=False)
-        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
+        # Inner Scroll Area (Height + Border=False implied by CSS)
+        with st.container(height=SCROLL_AREA_HEIGHT):
             sel = get_selected_row()
             if sel is None:
                 st.info("Please select an alert to view the snapshot.")
