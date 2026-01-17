@@ -629,16 +629,23 @@ st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
     st.caption("Last 50 records (scrollable)")
+
     recent = df_sorted.head(50).copy()
 
+    # Keep only the useful columns (since you have fixed single camera + location)
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
-show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
 
-show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
+    # Format time
+    show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
 
-show["Confidence"] = np.where(
-    pd.notna(recent[col_conf]),
-    recent[col_conf].round(0).astype(int).astype(str) + "%",
-    "—"
-)
+    # Rename columns (Dogs -> Stray Dogs)
+    show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
+
+    # Format confidence nicely
+    show["Confidence"] = np.where(
+        pd.notna(recent[col_conf]),
+        recent[col_conf].round(0).astype(int).astype(str) + "%",
+        "—"
+    )
+
     st.dataframe(show, use_container_width=True, height=380)
