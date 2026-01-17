@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: UNIFIED BOX STYLING FOR ALL CARDS
+# CSS: GLOBAL BOX STYLING (THE FIX)
 # =========================
 st.markdown(
     f"""
@@ -41,43 +41,34 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. MANUAL KPI CARD STYLE (Row 1 HTML Boxes) */
+/* 2. MASTER CARD STYLE */
+/* Ini akan apply kotak putih + border coklat kepada SEMUA st.container(border=True) */
+[data-testid="stVerticalBlockBorderWrapper"] {{
+    background-color: #ffffff !important;
+    border: 1px solid #9e5908 !important; /* BORDER COKLAT WAJIB ADA */
+    border-radius: 12px !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    padding: 20px !important;
+    margin-bottom: 0px !important;
+}}
+
+/* 3. HTML KPI CARD STYLE (Backup untuk Row 1 jika guna HTML) */
 .kpi-card {{
     background-color: #ffffff;
-    border: 1px solid #9e5908; /* Brown Border */
+    border: 1px solid #9e5908;
     border-radius: 12px;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     padding: 20px;
     display: flex;
     flex-direction: column;
     height: 100%;
-    margin-bottom: 0px; 
 }}
 
-/* 3. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
-/* INI UNTUK PASTIKAN ROW 2 ADA KOTAK SAMA MACAM KPI */
-[data-testid="stVerticalBlockBorderWrapper"] {{
-    background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; /* Brown Border - SAMA MACAM ATAS */
-    border-radius: 12px !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-    padding: 20px !important;
-    margin-bottom: 0px !important; 
-}}
-
-/* 4. CLEAN UP INNER CONTENT */
-[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-}}
-
-/* 5. Text & Headers */
+/* 4. Text & Headers */
 .stApp, .stApp * {{ color: #0d0700 !important; }}
 .small-muted {{ color: #261603 !important; }}
 
-/* 6. Header Title Area */
+/* 5. Header Title Area */
 .header-area {{
     margin-bottom: 30px;
     padding: 20px;
@@ -88,10 +79,10 @@ html, body, [class*="css"] {{
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
-/* 7. Buttons */
+/* 6. Buttons */
 .stButton > button {{
     width: 100%;
-    border: 1px solid #9e5908 !important; /* Brown Border */
+    border: 1px solid #9e5908 !important;
     background: #ffffff !important;
     color: #0f172a !important;
     font-weight: 700;
@@ -102,7 +93,7 @@ html, body, [class*="css"] {{
     background: #fdfae8 !important;
 }}
 
-/* 8. Thumbnails */
+/* 7. Thumbnails */
 .thumb {{
     border-radius: 12px;
     overflow: hidden;
@@ -111,7 +102,7 @@ html, body, [class*="css"] {{
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 
-/* 9. Light Mode Table */
+/* 8. Light Mode Table */
 table.custom-table {{ width: 100%; border-collapse: collapse; color: #0f172a; font-size: 14px; }}
 table.custom-table th {{ background-color: #f1f5f9; color: #0f172a; font-weight: 800; text-align: left; padding: 10px; border-bottom: 2px solid #cbd5e1; }}
 table.custom-table td {{ padding: 10px; border-bottom: 1px solid #e2e8f0; }}
@@ -288,7 +279,6 @@ st.markdown(
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
-# CARD 1
 with k1:
     st.markdown(f"""
     <div class="kpi-card">
@@ -301,7 +291,6 @@ with k1:
     </div>
     """, unsafe_allow_html=True)
 
-# CARD 2
 with k2:
     st.markdown(f"""
     <div class="kpi-card">
@@ -314,7 +303,6 @@ with k2:
     </div>
     """, unsafe_allow_html=True)
 
-# CARD 3
 with k3:
     st.markdown(f"""
     <div class="kpi-card">
@@ -327,19 +315,22 @@ with k3:
     </div>
     """, unsafe_allow_html=True)
 
+# SPACE ONLY - LINE REMOVED
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (ST CONTAINERS - STYLED SAME AS KPI)
+# ROW 2: 3 FEATURE CARDS (BOXES FIXED)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4 ---
 with left:
-    with st.container(border=True): # <--- This container gets the BROWN BORDER style
+    # Menggunakan st.container(border=True) yang sekarang di-style oleh CSS untuk ada border coklat
+    with st.container(border=True): 
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
+        # Inner container tanpa border
         with st.container(height=SCROLLABLE_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No data.")
@@ -370,7 +361,7 @@ with left:
 
 # --- CARD 5 ---
 with mid:
-    with st.container(border=True): # <--- This container gets the BROWN BORDER style
+    with st.container(border=True): # Kotak 5 (Border Coklat)
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -402,7 +393,7 @@ with mid:
 
 # --- CARD 6 ---
 with right:
-    with st.container(border=True): # <--- This container gets the BROWN BORDER style
+    with st.container(border=True): # Kotak 6 (Border Coklat)
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
@@ -440,7 +431,7 @@ st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 # =========================
 # ROW 3: TRENDS & ANALYTICS
 # =========================
-with st.container(border=True):
+with st.container(border=True): # Kotak 7 (Border Coklat)
     st.subheader("📈 Detection Trends & Analytics")
     mode = st.radio("Analytics View", ["24 Hours", "7 Days", "Severity Distribution"], horizontal=True)
 
@@ -481,7 +472,7 @@ st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 # =========================
 # ROW 4: RECENT EVENTS
 # =========================
-with st.container(border=True):
+with st.container(border=True): # Kotak 8 (Border Coklat)
     st.subheader("🧾 Recent Detection Events")
     st.caption("Last 50 records (scrollable)")
     recent = df_sorted.head(50).copy()
