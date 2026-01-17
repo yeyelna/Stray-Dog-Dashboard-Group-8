@@ -133,6 +133,16 @@ html,body,[class*="css"]{font-family:Inter,system-ui,-apple-system,Segoe UI,Robo
   background:#f8fafc !important;
   border-color:rgba(30,41,59,.30) !important;
 }
+
+/* ===== Row 1 KPI: SINGLE OUTER BORDER ONLY (no Streamlit border wrapper) ===== */
+.kpi-card{
+  background:#ffffff;
+  border:1.5px solid #475569;
+  border-radius:16px;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,0.10);
+  padding:16px;
+}
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -375,53 +385,55 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (ONE border only)
+# ROW 1: KPI (HTML cards -> ONE border only)
 # =========================
 k1, k2, k3 = st.columns(3, gap="medium")
 
 with k1:
-    with st.container(border=True):
-        st.markdown(
-            f"""
-            <div class="kpi-top">
-              <div class="kpi-ico" style="background:#fee2e2;color:#b91c1c">⛔</div>
-              {delta_chip(pct_change(new_today, new_yday))}
-            </div>
-            <div class="kpi-val">{new_today}</div>
-            <div class="kpi-lab">New Alerts</div>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        f"""
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-ico" style="background:#fee2e2;color:#b91c1c">⛔</div>
+            {delta_chip(pct_change(new_today, new_yday))}
+          </div>
+          <div class="kpi-val">{new_today}</div>
+          <div class="kpi-lab">New Alerts</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 with k2:
-    with st.container(border=True):
-        st.markdown(
-            f"""
-            <div class="kpi-top">
-              <div class="kpi-ico" style="background:#e0f2fe;color:#075985">📊</div>
-              {delta_chip(pct_change(dogs_today, dogs_yday))}
-            </div>
-            <div class="kpi-val">{dogs_today}</div>
-            <div class="kpi-lab">Total Dogs Detected</div>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        f"""
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-ico" style="background:#e0f2fe;color:#075985">📊</div>
+            {delta_chip(pct_change(dogs_today, dogs_yday))}
+          </div>
+          <div class="kpi-val">{dogs_today}</div>
+          <div class="kpi-lab">Total Dogs Detected</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 with k3:
-    with st.container(border=True):
-        st.markdown(
-            f"""
-            <div class="kpi-top">
-              <div class="kpi-ico" style="background:#ffedd5;color:#9a3412">🚨</div>
-              {delta_chip(pct_change(hp_today, hp_yday))}
-            </div>
-            <div class="kpi-val">{hp_today}</div>
-            <div class="kpi-lab">High Priority</div>
-            """,
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        f"""
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <div class="kpi-ico" style="background:#ffedd5;color:#9a3412">🚨</div>
+            {delta_chip(pct_change(hp_today, hp_yday))}
+          </div>
+          <div class="kpi-val">{hp_today}</div>
+          <div class="kpi-lab">High Priority</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 2: SAME HEIGHT for 3 cards + Active Alerts scroll inside fixed box
