@@ -23,42 +23,26 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: FORCE DARK TEXT & BOX STYLING
+# CSS
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
-html, body, [class*="css"] {{
-    font-family: 'Inter', sans-serif;
-    background-color: #f7f4ef !important;
-}}
-.stApp {{
-    background-color: #f7f4ef !important;
-}}
-.block-container {{
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1400px;
-}}
+/* Global Background */
+html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
+.stApp {{ background-color: #f7f4ef !important; }}
+.block-container {{ padding-top: 2rem; max-width: 1400px; }}
 
-/* 2. FORCE DARK TEXT (System Override) */
+/* FORCE DARK TEXT GLOBALLY */
 h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     color: #0f172a !important; 
 }}
-[data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
-    color: #0f172a !important;
-}}
-.small-muted {{
-    color: #334155 !important; 
-}}
-
-/* 3. EXCEPTION: White text for Badges/Buttons */
+/* Exception for Badges/Buttons text */
 .thumb span, .sev-badge {{
     color: #ffffff !important;
 }}
 
-/* 4. MANUAL KPI CARD STYLE (Row 1 HTML) */
+/* KPI CARDS (Row 1) - Manual HTML Box */
 .kpi-card {{
     background-color: #ffffff;
     border: 1px solid #9e5908;
@@ -70,7 +54,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     height: 100%;
 }}
 
-/* 5. ROW 2 & 4 CARD STYLE (Streamlit Containers) */
+/* ROW 2 CARDS (Streamlit Containers) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
     border: 1px solid #9e5908 !important; /* Brown Border */
@@ -87,7 +71,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     padding: 0 !important;
 }}
 
-/* 6. Header Title Area */
+/* Header */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
@@ -95,31 +79,30 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
-/* 7. Buttons */
+/* Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
-    background: #ffffff !important; 
-    color: #0f172a !important;
+    background: #ffffff !important; color: #0f172a !important;
     font-weight: 700; border-radius: 10px;
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 8. Vertical Line Separator (Optional use) */
+/* Vertical Line Separator Style */
 .vertical-line {{
     border-left: 2px solid #9e5908;
-    height: 500px;
+    height: 500px; /* Adjust height to match cards */
     margin: auto;
 }}
 
-/* 9. Thumbnails & Badges */
+/* Thumbnails */
 .thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
 
-/* 10. Table Styling */
-table.custom-table {{ width: 100%; border-collapse: collapse; color: #0f172a !important; font-size: 14px; }}
-table.custom-table th {{ background-color: #f1f5f9; color: #0f172a !important; padding: 10px; border-bottom: 2px solid #cbd5e1; }}
-table.custom-table td {{ padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a !important; }}
+/* FORCE DATAFRAME TEXT COLOR */
+[data-testid="stDataFrame"] {{
+    color: #000000 !important;
+}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -184,15 +167,36 @@ def compute_peak_2hr(hourly_dogs_dict):
         if s > best_sum: best_sum, best_h = s, h
     return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
 
+# --- UPDATED TIME AGO FUNCTION ---
 def time_ago(ts: datetime, now_: datetime) -> str:
-    secs = int(max(0, (now_ - ts).total_seconds()))
-    if secs < 60: return "just now"
+    diff = now_ - ts
+    secs = int(max(0, diff.total_seconds()))
+    
+    if secs < 60:
+        return "just now"
+    
     mins = secs // 60
-    if mins < 60: return f"{mins}m ago"
+    if mins < 60:
+        return f"{mins}m ago"
+    
     hrs = mins // 60
-    if hrs < 24: return f"{hrs}h ago"
+    if hrs < 24:
+        return f"{hrs}h ago"
+    
     days = hrs // 24
-    return f"{days}d ago"
+    if days < 7:
+        return f"{days}d ago"
+    
+    weeks = days // 7
+    if weeks < 4:
+        return f"{weeks}w ago"
+    
+    months = days // 30
+    if months < 12:
+        return f"{months}mo ago"
+    
+    years = days // 365
+    return f"{years}y ago"
 
 def delta_chip(pct):
     if pct is None or np.isnan(pct): return '<span style="color:#16a34a; font-weight:bold; font-size:12px">+0%</span>'
@@ -281,7 +285,7 @@ st.markdown(
     f"""
     <div class="header-area">
         <div class="main-title">🐕 Stray Dog Detection System</div>
-        <div style="font-size:16px; color:#3b2303 !important;">Real-Time AI Detection Monitoring</div>
+        <div style="font-size:16px; color:#3b2303;">Real-Time AI Detection Monitoring</div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -299,8 +303,8 @@ with k1:
             <div style="font-size:28px;">⛔</div>
             {delta_chip(pct_change(new_today, new_yday))}
         </div>
-        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700 !important;">{new_today}</div>
-        <div style="font-weight:bold; color:#64748b !important; font-size:14px;">New Alerts</div>
+        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700;">{new_today}</div>
+        <div style="font-weight:bold; color:#64748b; font-size:14px;">New Alerts</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -311,8 +315,8 @@ with k2:
             <div style="font-size:28px;">📊</div>
             {delta_chip(pct_change(dogs_today, dogs_yday))}
         </div>
-        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700 !important;">{dogs_today}</div>
-        <div style="font-weight:bold; color:#64748b !important; font-size:14px;">Total Stray Dogs Detected</div>
+        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700;">{dogs_today}</div>
+        <div style="font-weight:bold; color:#64748b; font-size:14px;">Total Stray Dogs Detected</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -323,15 +327,15 @@ with k3:
             <div style="font-size:28px;">🚨</div>
             {delta_chip(pct_change(hp_today, hp_yday))}
         </div>
-        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700 !important;">{hp_today}</div>
-        <div style="font-weight:bold; color:#64748b !important; font-size:14px;">High Priority</div>
+        <div style="font-size:42px; font-weight:900; margin-top:5px; color:#0d0700;">{hp_today}</div>
+        <div style="font-weight:bold; color:#64748b; font-size:14px;">High Priority</div>
     </div>
     """, unsafe_allow_html=True)
 
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS
+# ROW 2: 3 FEATURE CARDS (WITH VERTICAL LINES)
 # =========================
 # 5 Columns: [Card1] [Line] [Card2] [Line] [Card3]
 c1, sep1, c2, sep2, c3 = st.columns([1, 0.05, 1, 0.05, 1])
@@ -348,7 +352,8 @@ with c1:
             else:
                 r = df_sorted.iloc[0]
                 uid = row_uid(r)
-                mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
+                # Updated time calculation
+                time_display = time_ago(r["ts"], now)
                 
                 img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
                 if img_ok:
@@ -356,19 +361,18 @@ with c1:
                     <div class="thumb">
                         <img src="{str(r[col_img])}" />
                         <div style="position:absolute; top:10px; left:10px;">
-                           <span style="background:#22c55e; color:white !important; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">LIVE</span>
+                           <span style="background:#22c55e; color:white; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold;">LIVE</span>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b !important;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
-                st.markdown(f"<div style='margin-top:10px; font-weight:bold; color:#0f172a !important;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='small-muted'>{mins_ago}m ago • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='margin-top:10px; font-weight:bold;'>{str(r[col_loc])}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='small-muted'>{time_display} • {int(r[col_dogs])} dogs</div>", unsafe_allow_html=True)
                 st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
                 
-                if st.button("Select This Event", key=f"sel_{uid}"):
-                    st.session_state.selected_alert_uid = uid
+                # Removed "Select This Event" button as requested
 
 # --- SEPARATOR 1 ---
 with sep1:
@@ -393,8 +397,8 @@ with c2:
                     st.markdown(f"""
                     <div style="padding:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                            <span style="font-weight:bold; font-size:15px; color:#0f172a !important;">{int(r[col_dogs])} Dog(s)</span>
-                            <span style="background:{bg}; color:{col} !important; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                            <span style="font-weight:bold; font-size:15px;">{int(r[col_dogs])} Dog(s)</span>
+                            <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span class="small-muted" style="font-size:12px;">{str(r[col_loc])}</span>
@@ -428,8 +432,8 @@ with c3:
 
                 st.markdown(f"""
                 <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:18px; font-weight:900; color:#0f172a !important;">{str(sel[col_id])}</span>
-                    <span style="background:{bg}; color:{col} !important; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                    <span style="font-size:18px; font-weight:900;">{str(sel[col_id])}</span>
+                    <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -437,7 +441,7 @@ with c3:
                 if img_ok:
                     st.image(str(sel[col_img]), use_container_width=True)
                 else:
-                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b !important;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;color:#64748b;font-weight:bold;">No Image</div>""", unsafe_allow_html=True)
                 
                 st.markdown("---")
                 st.markdown(f"**Loc:** {str(sel[col_loc])}")
@@ -445,11 +449,13 @@ with c3:
                 st.markdown(f"**Time:** {ts_txt}")
                 st.markdown(f"**Conf:** {conf_txt}")
 
+st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+
 # =========================
 # SEPARATOR LINE UNDER ROW 2
 # =========================
 st.markdown(
-    """<hr style="height:1px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
+    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
     unsafe_allow_html=True
 )
 
@@ -469,7 +475,6 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        # Force Chart Text Color to Dark
         fig.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'), xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), legend=dict(font=dict(color='#000000')))
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
@@ -481,7 +486,6 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        # Force Chart Text Color to Dark
         fig.update_layout(template="plotly_white", barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'), xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), legend=dict(font=dict(color='#000000')))
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
@@ -491,7 +495,6 @@ with st.container(border=True):
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
-        # Force Chart Text Color to Dark
         fig.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'), legend=dict(font=dict(color='#000000')))
         st.plotly_chart(fig, use_container_width=True, theme=None)
 
@@ -509,9 +512,28 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     
-    # Force Pandas Styler to Dark Text
+    # --- UPDATED TABLE STYLING ---
     def highlight_sev(val):
-        return 'color: #000000 !important;'
+        return 'color: #000000' # Force inner cells to be black
     
-    styled_df = show.style.set_properties(**{'background-color': '#ffffff', 'color': '#000000 !important', 'border-color': '#e2e8f0'}).map(highlight_sev, subset=['Severity'])
-    st.dataframe(styled_df, use_container_width=True, height=380, column_config={"Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), "Detection ID": st.column_config.TextColumn("ID", width="small")})
+    # 1. Properties for the whole table (Light bg, Dark text, Borders)
+    # 2. Map color to specific columns
+    # 3. set_table_styles to FORCE headers to be light with black text
+    styled_df = show.style.set_properties(**{
+        'background-color': '#ffffff', 
+        'color': '#000000',
+        'border-color': '#e2e8f0'
+    }).map(highlight_sev, subset=['Severity']).set_table_styles([
+        {'selector': 'th', 'props': [('background-color', '#f1f5f9'), ('color', '#000000 !important'), ('font-weight', 'bold')]},
+        {'selector': 'td', 'props': [('color', '#000000 !important')]}
+    ])
+
+    st.dataframe(
+        styled_df, 
+        use_container_width=True, 
+        height=380, 
+        column_config={
+            "Timestamp": st.column_config.TextColumn("Timestamp", width="medium"), 
+            "Detection ID": st.column_config.TextColumn("ID", width="small")
+        }
+    )
