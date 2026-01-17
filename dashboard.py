@@ -23,92 +23,76 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: TOTAL FORCE LIGHT MODE (AGGRESSIVE FIX)
+# CSS: AGGRESSIVE LIGHT MODE FORCE
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
+/* 1. FORCE CSS VARIABLES TO LIGHT MODE */
+/* This overrides Streamlit's internal theme variables regardless of system settings */
+:root {{
+    --primary-color: #9e5908;
+    --background-color: #ffffff;
+    --secondary-background-color: #f0f2f6;
+    --text-color: #000000;
+    --font: "Inter", sans-serif;
+}}
+
+/* 2. Global Background */
 html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
-.stApp {{ background-color: #f7f4ef !important; }}
+.stApp {{ background-color: #f7f4ef !important; color: #000000 !important; }}
 .block-container {{ padding-top: 2rem; max-width: 1400px; }}
 
-/* 2. FORCE DARK TEXT GLOBALLY */
-h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
-    color: #0f172a !important; 
-}}
-.thumb span, .sev-badge {{
-    color: #ffffff !important; /* Keep badges white text */
-}}
-
-/* ============================================================ */
-/* 3. TABLE & TOOLBAR FORCE (THE FIX)                           */
-/* ============================================================ */
-
-/* A. FORCE TOOLBAR (Option Part) to Light Grey */
-[data-testid="stElementToolbar"] {{
-    background-color: #f8fafc !important; /* GREY CAIR */
-    border: 1px solid #cbd5e1 !important;
-    color: #000000 !important;
-    border-radius: 8px !important;
-}}
-/* Force Icons in Toolbar to Black */
-[data-testid="stElementToolbar"] button {{
-    color: #000000 !important;
-}}
-[data-testid="stElementToolbar"] svg {{
-    fill: #000000 !important;
-    color: #000000 !important;
-}}
-[data-testid="stElementToolbar"]:hover {{
-    background-color: #e2e8f0 !important; /* Darker grey on hover */
-}}
-
-/* B. FORCE TABLE CONTAINER */
+/* 3. DATAFRAME & TOOLBAR SPECIFIC FORCE */
+/* Force the Dataframe container to use light theme variables */
 [data-testid="stDataFrame"] {{
     background-color: #ffffff !important;
     border: 1px solid #e2e8f0;
 }}
 
-/* C. FORCE TABLE HEADERS (Header Log) to Light Grey */
-[data-testid="stDataFrame"] th {{
-    background-color: #f8fafc !important; /* GREY CAIR */
-    color: #000000 !important; /* TULISAN HITAM */
-    font-weight: 900 !important;
-    border-bottom: 2px solid #9e5908 !important; /* Garis Coklat */
+/* The Toolbar (Search/Download options) */
+[data-testid="stElementToolbar"] {{
+    background-color: #f8fafc !important; /* Light Grey BG */
+    color: #000000 !important; /* Dark Text */
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}}
+[data-testid="stElementToolbar"] button {{
+    color: #000000 !important;
+    font-weight: 900 !important; /* Bold */
+}}
+[data-testid="stElementToolbar"] svg {{
+    fill: #000000 !important; /* Icons Black */
+    stroke: #000000 !important;
+}}
+[data-testid="stElementToolbar"]:hover {{
+    background-color: #e2e8f0 !important;
 }}
 
-/* D. FORCE TABLE CELLS (Isi Log) to White & Black Text */
+/* Force Headers within the table to be Light */
+[data-testid="stDataFrame"] th {{
+    background-color: #f8fafc !important;
+    color: #000000 !important;
+    font-weight: 900 !important;
+    border-bottom: 2px solid #9e5908 !important;
+}}
 [data-testid="stDataFrame"] td {{
     background-color: #ffffff !important;
-    color: #000000 !important; /* TULISAN HITAM */
+    color: #000000 !important;
     border-bottom: 1px solid #e2e8f0 !important;
 }}
 
-/* ============================================================ */
-
-/* 4. KPI CARDS (Row 1) */
-.kpi-card {{
-    background-color: #ffffff;
-    border: 1px solid #9e5908;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}}
-
-/* 5. ROW 2 & 4 CARD STYLE */
-[data-testid="stVerticalBlockBorderWrapper"] {{
+/* 4. CARDS STYLING (Row 1 & Row 2) */
+.kpi-card, [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: 1px solid #9e5908 !important; 
+    border: 1px solid #9e5908 !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
     padding: 20px !important;
+    margin-bottom: 0px !important;
 }}
 
-/* Inner clean up */
+/* Clean up inner spacing for containers */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -116,7 +100,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
     padding: 0 !important;
 }}
 
-/* 6. Header Area */
+/* 5. Header Title Area */
 .header-area {{
     margin-bottom: 30px; padding: 20px; background-color: #ffffff;
     border-left: 6px solid #452603; border-radius: 12px;
@@ -124,7 +108,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .main-title {{ font-size: 32px; font-weight: 900; color: #0d0700 !important; }}
 
-/* 7. Buttons */
+/* 6. Buttons */
 .stButton > button {{
     width: 100%; border: 1px solid #9e5908 !important;
     background: #ffffff !important; color: #0f172a !important;
@@ -132,16 +116,16 @@ h1, h2, h3, h4, h5, h6, p, div, span, label, li, a {{
 }}
 .stButton > button:hover {{ background: #fdfae8 !important; }}
 
-/* 8. Vertical Line Separator */
+/* 7. Vertical Line Separator */
 .vertical-line {{
     border-left: 2px solid #9e5908;
     height: 500px; margin: auto;
 }}
 
-/* 9. Thumbnails */
+/* 8. Thumbnails */
 .thumb {{ border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
-.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; }}
+.sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; color: #ffffff !important; }}
 </style>
 """,
     unsafe_allow_html=True,
@@ -474,7 +458,7 @@ with c3:
 # SEPARATOR LINE UNDER ROW 2
 # =========================
 st.markdown(
-    """<hr style="height:1px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
+    """<hr style="height:3px;border:none;color:#9e5908;background-color:#9e5908;margin-top:20px;margin-bottom:20px;" />""", 
     unsafe_allow_html=True
 )
 
@@ -523,7 +507,7 @@ with st.container(border=True):
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS
+# ROW 4: RECENT EVENTS (FORCED LIGHT TABLE)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
@@ -534,7 +518,7 @@ with st.container(border=True):
     show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
     show["Confidence"] = np.where(pd.notna(recent[col_conf]), recent[col_conf].round(0).astype(int).astype(str) + "%", "—")
     
-    # --- UPDATED TABLE STYLING FOR LIGHT MODE FORCE ---
+    # 1. Force Pandas Styler (Black Text)
     def highlight_sev(val):
         return 'color: #000000 !important;' 
     
@@ -542,13 +526,9 @@ with st.container(border=True):
         'background-color': '#ffffff', 
         'color': '#000000 !important', 
         'border-color': '#e2e8f0'
-    }).map(highlight_sev, subset=['Severity']).set_table_styles([
-        # Headers: Grey Cair (#f8fafc) & Black Bold Text
-        {'selector': 'th', 'props': [('background-color', '#f8fafc'), ('color', '#000000 !important'), ('font-weight', '900'), ('border-bottom', '2px solid #9e5908')]},
-        # Rows: White BG & Black Text
-        {'selector': 'td', 'props': [('color', '#000000 !important'), ('background-color', '#ffffff !important')]}
-    ])
+    }).map(highlight_sev, subset=['Severity'])
 
+    # 2. Render Dataframe with hide_index=True
     st.dataframe(
         styled_df, 
         use_container_width=True, 
