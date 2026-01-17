@@ -11,7 +11,6 @@ from streamlit_autorefresh import st_autorefresh
 # CONFIG
 # =========================
 st.set_page_config(page_title="Smart City Stray Dog Control System", layout="wide")
-
 TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
@@ -20,139 +19,106 @@ REFRESH_SEC = 8
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
-# Heights (keep camera/picture natural, make alerts scroll in fixed height)
-ALERT_SCROLL_HEIGHT = 520  # this is the "fixed height box" area for alerts list
-TRENDS_CHART_HEIGHT = 380  # reduce a bit so Peak/Avg never gets cut off
+# Fixed visual heights (ROW 2 cards)
+ROW2_CARD_HEIGHT_PX = 640
+ALERTS_SCROLL_HEIGHT_PX = 520  # must be smaller than card height
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS (ONE box per feature + dark readable text + alerts scroll)
+# CSS (ONE card per feature + darker KPI text + no redundancy)
 # =========================
 st.markdown(
-    """
+    f"""
 <style>
-html, body, [class*="css"] {font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;}
-.stApp{background:#f7f4ef;}
-.block-container{padding-top:1rem; padding-bottom:1.2rem; max-width:1400px;}
+html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}}
+.stApp{{background:#f7f4ef}}
+.block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 
-/* Dark readable text everywhere */
-.stApp, .stApp *{color:#0f172a !important;}
-[data-testid="stCaptionContainer"] *{color:#475569 !important;}
-small, .small-muted{color:#475569 !important;}
-*{overflow-wrap:anywhere; word-break:break-word;}
+/* Text: keep readable (dark) */
+.stApp, .stApp *{{color:#0f172a !important}}
+[data-testid="stCaptionContainer"] *{{color:#475569 !important}}
+.small-muted, small{{color:#475569 !important}}
+*{{overflow-wrap:anywhere;word-break:break-word}}
 
-/* Row spacing */
-.row-gap{height:18px;}
-
-/* ===== CARD / BOX styling for st.container(border=True) =====
-   Some Streamlit versions render a wrapper with this testid when border=True.
-   We style that wrapper as the ONLY visible box (no redundant inner frame). */
-[data-testid="stVerticalBlockBorderWrapper"]{
-  background:#faf7f2 !important;
-  border:1px solid rgba(30,41,59,.14) !important;
-  border-radius:18px !important;
-  box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
-  padding:14px !important;
-  margin:0 !important;
-}
-/* Kill inner duplicate framing */
-[data-testid="stVerticalBlockBorderWrapper"] > div{
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  padding:0 !important;
-  margin:0 !important;
-}
-
-/* HEADER */
-.headerbar{
-  background:#ffffff;
-  border:1px solid rgba(30,41,59,.12);
+/* --- CARD WRAPPER (our own box) --- */
+.card {{
+  background:#faf7f2;
+  border:1px solid rgba(30,41,59,.14);
   border-radius:18px;
   box-shadow:0 6px 18px rgba(15,23,42,.06);
-  padding:14px 16px;
-  margin-bottom:12px;
-}
-.title{font-size:22px; font-weight:900; margin-bottom:2px;}
-.subtitle{font-size:13px; color:#475569 !important; margin-top:-2px;}
+  padding:14px;
+  margin:0;
+}}
+.card.row2 {{
+  height:{ROW2_CARD_HEIGHT_PX}px;
+}}
+/* keep images/charts inside card spacing */
+.card img {{max-width:100%; height:auto;}}
+.row-gap{{height:18px}}
 
-.pill{
-  display:inline-flex; align-items:center; gap:8px;
-  padding:9px 12px; border-radius:14px;
+/* HEADER */
+.headerbar{{
+  background:#ffffff;border:1px solid rgba(30,41,59,.12);
+  border-radius:18px;box-shadow:0 6px 18px rgba(15,23,42,.06);
+  padding:14px 16px;margin-bottom:12px
+}}
+.title{{font-size:22px;font-weight:900;margin-bottom:2px}}
+.subtitle{{font-size:13px;color:#475569 !important;margin-top:-2px}}
+
+.pill{{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:14px;
   border:1px solid rgba(30,41,59,.12);
-  background:#ffffff; font-weight:900;
-}
-.pill-green{background:#ecfdf5 !important; border-color:#bbf7d0 !important; color:#166534 !important;}
-.pill-green *{color:#166534 !important;}
-.pill-yellow{background:#fffbeb !important; border-color:#fde68a !important; color:#92400e !important;}
-.pill-yellow *{color:#92400e !important;}
+  background:#ffffff;font-weight:900
+}}
+.pill-green{{background:#ecfdf5 !important;border-color:#bbf7d0 !important;color:#166534 !important}}
+.pill-green *{{color:#166534 !important}}
+.pill-yellow{{background:#fffbeb !important;border-color:#fde68a !important;color:#92400e !important}}
+.pill-yellow *{{color:#92400e !important}}
+.pill-red{{background:#fee2e2 !important;border-color:#fecaca !important;color:#991b1b !important}}
+.pill-red *{{color:#991b1b !important}}
 
 /* KPI */
-.kpi-ico{
-  width:34px; height:34px; border-radius:10px;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:900;
-}
-.kpi-top{display:flex; align-items:center; justify-content:space-between;}
-.kpi-val{font-size:34px; font-weight:900; margin-top:6px;}
-.kpi-lab{
-  display:block;
-  font-size:13px;
-  color:#334155 !important;  /* darker so it never disappears */
-  margin-top:-2px;
-  font-weight:700;
-}
-.delta{font-size:12px; font-weight:900; padding:4px 8px; border-radius:999px; display:inline-block;}
-.delta-pos{background:#fee2e2 !important; color:#991b1b !important;}
-.delta-neg{background:#dcfce7 !important; color:#166534 !important;}
+.kpi-ico{{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}}
+.kpi-top{{display:flex;align-items:center;justify-content:space-between}}
+.kpi-val{{font-size:34px;font-weight:900;margin-top:6px;color:#0f172a !important}}
+.kpi-lab{{font-size:13px;color:#0f172a !important;margin-top:-2px;font-weight:700}}
+.delta{{font-size:12px;font-weight:900;padding:4px 8px;border-radius:999px;display:inline-block}}
+.delta-pos{{background:#fee2e2 !important;color:#991b1b !important}}
+.delta-neg{{background:#dcfce7 !important;color:#166534 !important}}
 
 /* Badges */
-.badge{font-size:12px; font-weight:900; padding:6px 10px; border-radius:10px; display:inline-block;}
-.badge-low{background:#dbeafe !important; color:#1d4ed8 !important;}
-.badge-med{background:#fef3c7 !important; color:#92400e !important;}
-.badge-high{background:#ffedd5 !important; color:#9a3412 !important;}
-.badge-crit{background:#ffe4e6 !important; color:#9f1239 !important;}
-.badge-time{
-  background:#f1f5f9 !important;
-  color:#0f172a !important;
-  border:1px solid rgba(30,41,59,.10) !important;
-}
+.badge{{font-size:12px;font-weight:900;padding:6px 10px;border-radius:10px;display:inline-block}}
+.badge-low{{background:#dbeafe !important;color:#1d4ed8 !important}}
+.badge-med{{background:#fef3c7 !important;color:#92400e !important}}
+.badge-high{{background:#ffedd5 !important;color:#9a3412 !important}}
+.badge-crit{{background:#ffe4e6 !important;color:#9f1239 !important}}
+.badge-time{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.10) !important}}
 
-/* Thumbnail (keeps image INSIDE) */
-.thumb{
-  border-radius:16px;
-  overflow:hidden;
-  border:1px solid rgba(30,41,59,.12);
-  background:#ffffff;
-  position:relative;
-}
-.thumb img{display:block; width:100%; height:200px; object-fit:cover;}
-.overlay{position:absolute; left:10px; top:10px; display:flex; gap:8px;}
-.ov-pill{
-  background:#16a34a; color:#ffffff !important;
-  font-weight:900; font-size:12px;
-  padding:6px 10px; border-radius:10px;
-  display:flex; align-items:center; gap:6px;
-}
-.ov-rec{background:#ef4444;}
-.ov-cam{
-  background:rgba(15,23,42,.80); color:#ffffff !important;
-  font-weight:900; font-size:12px;
-  padding:6px 10px; border-radius:10px;
-}
-.ov-det{
-  position:absolute; left:10px; bottom:10px;
-  background:#f59e0b; color:#0f172a !important;
-  font-weight:900; font-size:12px;
-  padding:6px 10px; border-radius:10px;
-  display:flex; align-items:center; gap:6px;
-}
-.thumb-title{font-weight:900; margin-top:10px;}
-.thumb-sub{margin-top:-2px; color:#475569 !important;}
+/* Thumbnail */
+.thumb{{border-radius:16px;overflow:hidden;border:1px solid rgba(30,41,59,.12);background:#ffffff;position:relative}}
+.thumb img{{display:block;width:100%;height:220px;object-fit:cover}}
+.overlay{{position:absolute;left:10px;top:10px;display:flex;gap:8px}}
+.ov-pill{{
+  background:#16a34a;color:#ffffff !important;font-weight:900;font-size:12px;
+  padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px
+}}
+.ov-rec{{background:#ef4444}}
+.ov-cam{{
+  background:rgba(15,23,42,.80);color:#ffffff !important;font-weight:900;font-size:12px;
+  padding:6px 10px;border-radius:10px
+}}
+.ov-det{{
+  position:absolute;left:10px;bottom:10px;
+  background:#f59e0b;color:#0f172a !important;font-weight:900;font-size:12px;
+  padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px
+}}
+.thumb-title{{font-weight:900;margin-top:10px}}
+.thumb-sub{{margin-top:-2px;color:#475569 !important}}
 
-/* Buttons (match card style; no black bars) */
-.stButton > button{
+/* Buttons (no black bars) */
+.stButton > button{{
   width:100%;
   background:#ffffff !important;
   color:#0f172a !important;
@@ -160,31 +126,11 @@ small, .small-muted{color:#475569 !important;}
   border-radius:12px !important;
   font-weight:900 !important;
   box-shadow:none !important;
-}
-.stButton > button:hover{
+}}
+.stButton > button:hover{{
   background:#f8fafc !important;
   border-color:rgba(30,41,59,.22) !important;
-}
-
-/* Active Alerts: make the list area scroll like Recent Events */
-.alerts-scroll{
-  height: 520px;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-.alert-card{
-  padding:12px;
-  border-radius:16px;
-  border:1px solid rgba(30,41,59,.12);
-  background:#ffffff;
-  margin-bottom:12px;
-}
-
-/* Trends bottom summary: ensure not cut */
-.trends-summary{
-  padding-top:10px;
-  padding-bottom:6px;
-}
+}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -193,6 +139,12 @@ small, .small-muted{color:#475569 !important;}
 # =========================
 # HELPERS
 # =========================
+def card_open(extra_class: str = ""):
+    st.markdown(f'<div class="card {extra_class}">', unsafe_allow_html=True)
+
+def card_close():
+    st.markdown("</div>", unsafe_allow_html=True)
+
 def _clean_cols(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df.columns = [str(c).strip().lower().replace(" ", "_") for c in df.columns]
@@ -309,7 +261,7 @@ col_camtype = pick_col(raw, ["camera_type", "type"])
 col_dogs = pick_col(raw, ["dogs", "dog_count", "num_dogs", "count"])
 col_conf = pick_col(raw, ["confidence", "conf", "score"])
 col_sev = pick_col(raw, ["severity", "priority", "level"])
-col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional (table only)
+col_status = pick_col(raw, ["status", "alert_status", "state"])  # optional (table)
 img_candidates = [c for c in raw.columns if ("url" in c or "image" in c or "snapshot" in c or "photo" in c)]
 col_img = pick_col(raw, ["snapshot_url", "image_url", "img_url", "photo_url", "snapshot", "image", "url"]) or (
     img_candidates[0] if len(img_candidates) > 0 else None
@@ -323,7 +275,7 @@ df = raw.copy()
 df["ts"] = df[col_ts].apply(parse_ts)
 df = df.dropna(subset=["ts"]).copy()
 
-# Required fallbacks
+# fallbacks
 if col_id is None:
     df["detection_id"] = ["DET-" + str(i).zfill(6) for i in range(1, len(df) + 1)]
     col_id = "detection_id"
@@ -351,14 +303,12 @@ df[col_conf] = normalize_confidence(df[col_conf])
 
 if col_sev is None:
     dnum = df[col_dogs].astype(int)
-    df["severity"] = np.where(
-        dnum >= 4, "CRITICAL",
-        np.where(dnum >= 3, "HIGH",
-        np.where(dnum >= 2, "MEDIUM", "LOW"))
-    )
+    df["severity"] = np.where(dnum >= 4, "CRITICAL",
+                      np.where(dnum >= 3, "HIGH",
+                      np.where(dnum >= 2, "MEDIUM", "LOW")))
     col_sev = "severity"
 
-# Force single camera/location naming everywhere
+# Force single camera/location naming
 df[col_cam] = SINGLE_CAMERA_NAME
 df[col_camtype] = SINGLE_CAMERA_NAME
 df[col_loc] = SINGLE_LOCATION_NAME
@@ -419,8 +369,8 @@ st.markdown(
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="pill pill-green">✅ <span>System Active</span></div>
-      <div class="pill pill-yellow">🔔 <span>{new_today} New Alerts</span></div>
+      <div class="pill pill-green">📈 <span>System Active</span></div>
+      <div class="pill pill-red">🔔 <span>{new_today} New Alerts</span></div>
     </div>
   </div>
 </div>
@@ -429,14 +379,14 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: KPI (one box per KPI)
+# ROW 1: KPI (one box each)
 # =========================
 k1, k2, k3 = st.columns(3)
 
 with k1:
-    with st.container(border=True):
-        st.markdown(
-            f"""
+    card_open()
+    st.markdown(
+        f"""
         <div class="kpi-top">
           <div class="kpi-ico" style="background:#fee2e2;color:#b91c1c">⛔</div>
           {delta_chip(pct_change(new_today, new_yday))}
@@ -444,13 +394,14 @@ with k1:
         <div class="kpi-val">{new_today}</div>
         <div class="kpi-lab">New Alerts</div>
         """,
-            unsafe_allow_html=True,
-        )
+        unsafe_allow_html=True,
+    )
+    card_close()
 
 with k2:
-    with st.container(border=True):
-        st.markdown(
-            f"""
+    card_open()
+    st.markdown(
+        f"""
         <div class="kpi-top">
           <div class="kpi-ico" style="background:#e0f2fe;color:#075985">📊</div>
           {delta_chip(pct_change(dogs_today, dogs_yday))}
@@ -458,13 +409,14 @@ with k2:
         <div class="kpi-val">{dogs_today}</div>
         <div class="kpi-lab">Total Dogs Detected</div>
         """,
-            unsafe_allow_html=True,
-        )
+        unsafe_allow_html=True,
+    )
+    card_close()
 
 with k3:
-    with st.container(border=True):
-        st.markdown(
-            f"""
+    card_open()
+    st.markdown(
+        f"""
         <div class="kpi-top">
           <div class="kpi-ico" style="background:#ffedd5;color:#9a3412">🚨</div>
           {delta_chip(pct_change(hp_today, hp_yday))}
@@ -472,38 +424,38 @@ with k3:
         <div class="kpi-val">{hp_today}</div>
         <div class="kpi-lab">High Priority</div>
         """,
-            unsafe_allow_html=True,
-        )
+        unsafe_allow_html=True,
+    )
+    card_close()
 
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: Camera + Alerts + Picture (one box per feature)
+# ROW 2: Camera + Active Alerts (scroll in fixed height) + Picture
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
 with left:
-    with st.container(border=True):
-        st.subheader("📷 Camera Feeds & Snapshots")
-        st.caption("Latest detection (single feed)")
+    card_open("row2")
+    st.subheader("📷 Camera Feeds & Snapshots")
+    st.caption("Latest detection (single feed)")
 
-        if len(df_sorted) == 0:
-            st.info("No detection records.")
-        else:
-            r = df_sorted.iloc[0]
-            uid = row_uid(r)
-            ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
-            mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
-            dogs = int(r[col_dogs])
-            dog_word = "stray dog" if dogs == 1 else "stray dogs"
-            cam = str(r[col_cam])
-            loc = str(r[col_loc])
+    if len(df_sorted) == 0:
+        st.info("No detection records.")
+    else:
+        r = df_sorted.iloc[0]
+        uid = row_uid(r)
+        ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
+        mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
+        dogs = int(r[col_dogs])
+        dog_word = "stray dog" if dogs == 1 else "stray dogs"
+        cam = str(r[col_cam])
+        loc = str(r[col_loc])
+        img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
 
-            img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
-
-            if img_ok:
-                st.markdown(
-                    f"""
+        if img_ok:
+            st.markdown(
+                f"""
                 <div class="thumb">
                   <img src="{str(r[col_img])}" />
                   <div class="overlay">
@@ -516,214 +468,216 @@ with left:
                 <div class="thumb-title">{loc}</div>
                 <div class="thumb-sub">{cam} • {ts_txt}</div>
                 """,
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown(
-                    """
-                <div class="thumb" style="height:200px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                """
+                <div class="thumb" style="height:220px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
                   No Snapshot URL
                 </div>
                 """,
-                    unsafe_allow_html=True,
-                )
-                st.markdown(f"**{loc}**")
-                st.caption(f"{cam} • {ts_txt}")
+                unsafe_allow_html=True,
+            )
+            st.markdown(f"**{loc}**")
+            st.caption(f"{cam} • {ts_txt}")
 
-            if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
-                st.session_state.selected_alert_uid = uid
-
-def render_alert_list_scroll(data: pd.DataFrame, scroll_height: int):
-    # This behaves like Recent Events scroll: fixed height + scroll inside.
-    if len(data) == 0:
-        st.info("No alerts.")
-        return
-
-    st.markdown(f"<div class='alerts-scroll' style='height:{scroll_height}px'>", unsafe_allow_html=True)
-
-    lim = min(len(data), 80)
-    for i in range(lim):
-        r = data.iloc[i]
-        uid = row_uid(r)
-        sev_class, sev_txt = severity_badge(r[col_sev])
-
-        conf = r[col_conf]
-        conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
-        ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
-
-        dogs = int(r[col_dogs])
-        dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
-        ago_txt = time_ago(r["ts"], now)
-
-        # Card
-        st.markdown(
-            f"""
-            <div class="alert-card">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
-                <div style="min-width:0">
-                  <div style="font-weight:900">
-                    {dogs} {dog_word} Detected
-                    <span class="{sev_class}" style="margin-left:8px">{sev_txt}</span>
-                  </div>
-                  <div class="small-muted">{str(r[col_camtype])} • {str(r[col_cam])}</div>
-                  <div class="small-muted">📍 {str(r[col_loc])}</div>
-                  <div class="small-muted">🕒 {ts_txt} • 🎯 {conf_txt}</div>
-                </div>
-                <div style="text-align:right;flex:0 0 auto">
-                  <span class="badge badge-time">{ago_txt}</span>
-                </div>
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # Keep your existing details + clickable action
-        if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
+        if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
             st.session_state.selected_alert_uid = uid
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    card_close()
 
-with mid:
-    with st.container(border=True):
-        st.subheader("⛔ Active Alerts")
-        # Scroll INSIDE fixed height (same idea as Recent Detection Events)
-        render_alert_list_scroll(df_sorted, ALERT_SCROLL_HEIGHT)
+def render_alert_list(data):
+    # THIS makes it scroll inside a fixed height area (like st.dataframe(height=...))
+    with st.container(height=ALERTS_SCROLL_HEIGHT_PX):
+        if len(data) == 0:
+            st.info("No alerts.")
+            return
 
-with right:
-    with st.container(border=True):
-        st.subheader("🖼️ Active Alert Picture")
-        sel = get_selected_row()
-
-        if sel is None:
-            st.info("Please select an alert to view the snapshot.")
-        else:
-            sev_class, sev_txt = severity_badge(sel[col_sev])
-            ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
-            conf = sel[col_conf]
+        lim = min(len(data), 150)
+        for i in range(lim):
+            r = data.iloc[i]
+            uid = row_uid(r)
+            sev_class, sev_txt = severity_badge(r[col_sev])
+            conf = r[col_conf]
             conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
+            ts_txt = r["ts"].strftime("%d/%m/%Y %H:%M")
+            dogs = int(r[col_dogs])
+            dog_word = "Stray Dog" if dogs == 1 else "Stray Dogs"
+            ago_txt = time_ago(r["ts"], now)
 
             st.markdown(
                 f"""
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div style="padding:12px;border-radius:16px;border:1px solid rgba(30,41,59,.12);background:#ffffff;margin-bottom:10px">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                    <div style="min-width:0">
+                      <div style="font-weight:900">
+                        {dogs} {dog_word} Detected
+                        <span class="{sev_class}" style="margin-left:8px">{sev_txt}</span>
+                      </div>
+                      <div class="small-muted">{str(r[col_camtype])} • {str(r[col_cam])}</div>
+                      <div class="small-muted">📍 {str(r[col_loc])}</div>
+                      <div class="small-muted">🕒 {ts_txt} • 🎯 {conf_txt}</div>
+                    </div>
+                    <div style="text-align:right">
+                      <span class="badge badge-time">{ago_txt}</span>
+                    </div>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
+                st.session_state.selected_alert_uid = uid
+
+with mid:
+    card_open("row2")
+    st.subheader("⛔ Active Alerts")
+    st.caption("Scroll to view older detections")
+    render_alert_list(df_sorted)
+    card_close()
+
+with right:
+    card_open("row2")
+    st.subheader("🖼️ Active Alert Picture")
+    sel = get_selected_row()
+
+    if sel is None:
+        st.info("Please select an alert to view the snapshot.")
+    else:
+        sev_class, sev_txt = severity_badge(sel[col_sev])
+        ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
+        conf = sel[col_conf]
+        conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
+
+        st.markdown(
+            f"""
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
               <div style="font-weight:900">{str(sel[col_id])}</div>
               <span class="{sev_class}">{sev_txt}</span>
               <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
             </div>
             """,
-                unsafe_allow_html=True,
-            )
+            unsafe_allow_html=True,
+        )
 
-            img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
-            if img_ok:
-                st.image(str(sel[col_img]), use_container_width=True)
-            else:
-                st.markdown(
-                    """
-                <div style="height:360px;border-radius:16px;border:1px dashed rgba(30,41,59,.18);
+        img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
+        if img_ok:
+            st.image(str(sel[col_img]), use_container_width=True)
+        else:
+            st.markdown(
+                """
+                <div style="height:260px;border-radius:16px;border:1px dashed rgba(30,41,59,.18);
                 background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b">
                 No Snapshot URL in Sheet
                 </div>
                 """,
-                    unsafe_allow_html=True,
-                )
+                unsafe_allow_html=True,
+            )
 
-            st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
-            st.markdown(f"- **Location:** {str(sel[col_loc])}")
-            st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
-            st.markdown(f"- **Confidence:** {conf_txt}")
+        st.markdown(f"- **Camera:** {str(sel[col_cam])} ({str(sel[col_camtype])})")
+        st.markdown(f"- **Location:** {str(sel[col_loc])}")
+        st.markdown(f"- **Stray Dogs:** {int(sel[col_dogs])}")
+        st.markdown(f"- **Confidence:** {conf_txt}")
 
-st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
-
-# =========================
-# ROW 3: Trends (fix Peak/Avg cut off)
-# =========================
-with st.container(border=True):
-    st.subheader("📈 Detection Trends & Analytics")
-    mode = st.radio("Time Range", ["24 Hours", "7 Days", "Severity"], horizontal=True)
-
-    if mode == "24 Hours":
-        start = now - timedelta(hours=24)
-        d = df_sorted[df_sorted["ts"] >= start].copy()
-        hourly = d.groupby("hour").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
-        hours = list(range(24))
-        hourly = hourly.set_index("hour").reindex(hours, fill_value=0).reset_index()
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
-        fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=TRENDS_CHART_HEIGHT)
-        fig.update_xaxes(dtick=1, tickmode="linear")
-        st.plotly_chart(fig, use_container_width=True)
-
-        peak = compute_peak_2hr(hourly.set_index("hour")["dogs"].to_dict())
-        avg_daily = int(hourly["detections"].sum())
-
-    elif mode == "7 Days":
-        start = now - timedelta(days=7)
-        d = df_sorted[df_sorted["ts"] >= start].copy()
-        d["day"] = d["ts"].dt.date
-        daily = d.groupby("day").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
-
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
-        fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=TRENDS_CHART_HEIGHT)
-        st.plotly_chart(fig, use_container_width=True)
-
-        peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
-        avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
-
-    else:
-        start = now - timedelta(days=7)
-        d = df_sorted[df_sorted["ts"] >= start].copy()
-        sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
-        counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
-
-        fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.55)])
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=TRENDS_CHART_HEIGHT)
-        st.plotly_chart(fig, use_container_width=True)
-
-        peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
-        d["day"] = d["ts"].dt.date
-        daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
-        avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
-
-    st.markdown("<div class='trends-summary'>", unsafe_allow_html=True)
-    b1, b2 = st.columns(2)
-    with b1:
-        st.markdown(
-            f"<div style='text-align:center'><div class='small-muted'>Peak Hour</div>"
-            f"<div style='font-weight:900;font-size:22px;color:#7c3aed !important'>{peak}</div></div>",
-            unsafe_allow_html=True,
-        )
-    with b2:
-        st.markdown(
-            f"<div style='text-align:center'><div class='small-muted'>Avg Daily Detections</div>"
-            f"<div style='font-weight:900;font-size:22px;color:#2563eb !important'>{avg_daily}</div></div>",
-            unsafe_allow_html=True,
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
+    card_close()
 
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: Recent Events (table)
+# ROW 3: Trends (fix cut off stats)
 # =========================
-with st.container(border=True):
-    st.subheader("🧾 Recent Detection Events")
-    st.caption("Last 50 records (scrollable)")
-    recent = df_sorted.head(50).copy()
+card_open()
+st.subheader("📈 Detection Trends & Analytics")
+mode = st.radio("Time Range", ["24 Hours", "7 Days", "Severity"], horizontal=True)
 
-    # Since you only have 1 camera + 1 location, we remove Location/Camera columns.
-    show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
-    show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
-    show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
+if mode == "24 Hours":
+    start = now - timedelta(hours=24)
+    d = df_sorted[df_sorted["ts"] >= start].copy()
+    hourly = d.groupby("hour").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
+    hours = list(range(24))
+    hourly = hourly.set_index("hour").reindex(hours, fill_value=0).reset_index()
 
-    show["Confidence"] = np.where(
-        pd.notna(recent[col_conf]),
-        recent[col_conf].round(0).astype(int).astype(str) + "%",
-        "—",
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
+    fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)  # smaller so stats never cut off
+    fig.update_xaxes(dtick=1, tickmode="linear")
+    st.plotly_chart(fig, use_container_width=True)
+
+    peak = compute_peak_2hr(hourly.set_index("hour")["dogs"].to_dict())
+    avg_daily = int(hourly["detections"].sum())
+
+elif mode == "7 Days":
+    start = now - timedelta(days=7)
+    d = df_sorted[df_sorted["ts"] >= start].copy()
+    d["day"] = d["ts"].dt.date
+    daily = d.groupby("day").agg(detections=(col_id, "count"), dogs=(col_dogs, "sum")).reset_index()
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
+    fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
+    fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=360)
+    st.plotly_chart(fig, use_container_width=True)
+
+    peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
+    avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
+
+else:
+    start = now - timedelta(days=7)
+    d = df_sorted[df_sorted["ts"] >= start].copy()
+    sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
+    counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
+
+    fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.55)])
+    fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=360)
+    st.plotly_chart(fig, use_container_width=True)
+
+    peak = compute_peak_2hr(d.groupby(d["ts"].dt.hour)[col_dogs].sum().to_dict())
+    d["day"] = d["ts"].dt.date
+    daily = d.groupby("day").agg(detections=(col_id, "count")).reset_index()
+    avg_daily = int(round(daily["detections"].mean())) if len(daily) else 0
+
+# stats row (extra padding so never cut)
+b1, b2 = st.columns(2)
+with b1:
+    st.markdown(
+        f"<div style='text-align:center;padding:14px 0 4px 0'>"
+        f"<div class='small-muted'>Peak Hour</div>"
+        f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{peak}</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+with b2:
+    st.markdown(
+        f"<div style='text-align:center;padding:14px 0 4px 0'>"
+        f"<div class='small-muted'>Avg Daily Detections</div>"
+        f"<div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div>"
+        f"</div>",
+        unsafe_allow_html=True,
     )
 
-    st.dataframe(show, use_container_width=True, height=380)
+card_close()
+
+st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
+
+# =========================
+# ROW 4: Recent Events (scrollable log)
+# =========================
+card_open()
+st.subheader("🧾 Recent Detection Events")
+st.caption("Last 50 records (scrollable)")
+recent = df_sorted.head(50).copy()
+
+show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
+show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
+show.columns = ["Timestamp", "Detection ID", "Stray Dogs", "Confidence", "Severity", "Status"]
+show["Confidence"] = np.where(
+    pd.notna(recent[col_conf]),
+    recent[col_conf].round(0).astype(int).astype(str) + "%",
+    "—"
+)
+
+st.dataframe(show, use_container_width=True, height=380)
+card_close()
