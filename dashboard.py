@@ -23,7 +23,7 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS
+# CSS: INDIVIDUAL BOXES WITH COLOURED BORDER
 # =========================
 st.markdown(
     f"""
@@ -41,13 +41,17 @@ html, body, [class*="css"] {{
     max-width: 1400px;
 }}
 
-/* 2. CARD STYLE: WHITE BOX + STRONG SHADOW */
+/* 2. CARD STYLE: INDIVIDUAL BOXES */
+/* Targets every st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
     background-color: #ffffff !important;
-    border: none !important; 
+    
+    /* THE INDIVIDUAL BOX BORDER (Matches your line color) */
+    border: 1px solid #9e5908 !important; 
+    
     border-radius: 12px !important;
     
-    /* SHADOW UNDER THE BOX (Card) */
+    /* STRONG SHADOW */
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
     
     padding: 20px !important;
@@ -55,6 +59,7 @@ html, body, [class*="css"] {{
 }}
 
 /* 3. CLEAN UP INNER CONTENT */
+/* Prevents double borders inside the scrollable areas */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
     box-shadow: none !important;
@@ -66,15 +71,13 @@ html, body, [class*="css"] {{
 .stApp, .stApp * {{ color: #0d0700 !important; }}
 .small-muted {{ color: #261603 !important; }}
 
-/* 5. Header Title Area: WHITE BOX + SHADOW */
+/* 5. Header Title Area */
 .header-area {{
     margin-bottom: 30px;
     padding: 20px;
     background-color: #ffffff;
     border-left: 6px solid #452603;
     border-radius: 12px;
-    
-    /* SHADOW UNDER THE HEADER BOX */
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
@@ -82,7 +85,7 @@ html, body, [class*="css"] {{
 /* 6. Buttons */
 .stButton > button {{
     width: 100%;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid #9e5908 !important; /* Matches theme */
     background: #ffffff !important;
     color: #0f172a !important;
     font-weight: 700;
@@ -90,8 +93,7 @@ html, body, [class*="css"] {{
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }}
 .stButton > button:hover {{
-    background: #f8fafc !important;
-    border-color: #cbd5e1 !important;
+    background: #fdfae8 !important;
 }}
 
 /* 7. Thumbnails */
@@ -99,6 +101,7 @@ html, body, [class*="css"] {{
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 
@@ -265,7 +268,7 @@ hp_today = int(today_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL
 hp_yday = int(yday_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]).sum())
 
 # =========================
-# HEADER (SHADOW BOX)
+# HEADER
 # =========================
 st.markdown(
     f"""
@@ -278,13 +281,13 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (SHADOW BOXES)
+# ROW 1: 3 KPI CARDS (INDIVIDUAL BOXES)
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
 # CARD 1
 with k1:
-    with st.container(border=True):
+    with st.container(border=True): # Individual Box 1
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">⛔</div>
@@ -296,7 +299,7 @@ with k1:
 
 # CARD 2
 with k2:
-    with st.container(border=True):
+    with st.container(border=True): # Individual Box 2
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">📊</div>
@@ -308,7 +311,7 @@ with k2:
 
 # CARD 3
 with k3:
-    with st.container(border=True):
+    with st.container(border=True): # Individual Box 3
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">🚨</div>
@@ -325,13 +328,13 @@ st.markdown(
 )
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (SHADOW BOXES)
+# ROW 2: 3 FEATURE CARDS (INDIVIDUAL BOXES)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
 # --- CARD 4 ---
 with left:
-    with st.container(border=True):
+    with st.container(border=True): # Individual Box 4
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
@@ -365,7 +368,7 @@ with left:
 
 # --- CARD 5 ---
 with mid:
-    with st.container(border=True):
+    with st.container(border=True): # Individual Box 5
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll for more")
 
@@ -397,7 +400,7 @@ with mid:
 
 # --- CARD 6 ---
 with right:
-    with st.container(border=True):
+    with st.container(border=True): # Individual Box 6
         st.subheader("🖼️ Active Alert Picture")
         st.caption("Details")
 
