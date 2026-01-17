@@ -15,6 +15,7 @@ TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
 
+# Constants
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 SCROLLABLE_AREA_HEIGHT = 420  
@@ -22,12 +23,15 @@ SCROLLABLE_AREA_HEIGHT = 420
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS: CUSTOM RECTANGULAR SHAPE
+# CSS: STRICT CARD SEPARATION + TABLE STYLING
 # =========================
 st.markdown(
     f"""
 <style>
-/* 1. Global Background */
+/* 1. FORCE BEIGE BACKGROUND */
+html, body, [class*="css"] {{
+    font-family: 'Inter', sans-serif;
+}}
 .stApp {{
     background-color: #f7f4ef !important;
 }}
@@ -37,61 +41,81 @@ st.markdown(
     max-width: 1400px;
 }}
 
-/* 2. THE RECTANGULAR SHAPE (Applied to Cards) */
-/* Targets st.container(border=True) */
+/* 2. CARD STYLE: Targets specific st.container(border=True) */
 [data-testid="stVerticalBlockBorderWrapper"] {{
-    /* USER REQUEST: Transparent fill, #804e08 border */
-    background-color: transparent !important; 
-    border: 1px solid #804e08 !important; 
-    border-radius: 12px !important; /* Rounded corners */
-    
-    /* Remove default shadow to keep it flat like a shape outline */
-    box-shadow: none !important;
-    
-    padding: 16px !important;
+    background-color: #ffffff !important;
+    border: 2px solid #475569 !important; /* Thick Slate Grey Border */
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+    padding: 1rem !important;
     margin-bottom: 0px !important; 
 }}
 
-/* 3. INNER CLEANUP */
-/* If a shape is inside another (like scroll box), remove the border */
+/* 3. REMOVE DOUBLE BORDER FOR INTERNAL SCROLL AREAS */
 [data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
     border: none !important;
+    box-shadow: none !important;
     background: transparent !important;
     padding: 0 !important;
 }}
 
-/* 4. Text Visibility */
+/* 4. Text & Headers */
 .stApp, .stApp * {{ color: #0f172a !important; }}
 .small-muted {{ color: #64748b !important; }}
 
-/* 5. Header Title */
+/* 5. Header Title Area */
 .header-area {{
     margin-bottom: 30px;
     padding: 15px;
-    border-left: 6px solid #804e08; /* Matches the theme */
+    background: #ffffff;
+    border-left: 6px solid #2563eb;
+    border-radius: 8px;
 }}
 .main-title {{ font-size: 32px; font-weight: 900; }}
 
 /* 6. Buttons */
 .stButton > button {{
     width: 100%;
-    border: 1px solid #804e08 !important; /* Matches theme */
-    background: transparent !important;
-    color: #804e08 !important;
+    border: 1px solid #475569 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
     font-weight: 700;
 }}
 .stButton > button:hover {{
-    background: #fdfae8 !important; /* Light highlight */
+    background: #f1f5f9 !important;
 }}
 
 /* 7. Thumbnails & Badges */
 .thumb {{
-    border: 1px solid #804e08;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
     overflow: hidden;
 }}
 .thumb img {{ width: 100%; height: 220px; object-fit: cover; }}
 .sev-badge {{ padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; border: 1px solid rgba(0,0,0,0.1); }}
+
+/* 8. CUSTOM HTML TABLE STYLING (For Light Mode Table) */
+table.custom-table {{
+    width: 100%;
+    border-collapse: collapse;
+    color: #0f172a;
+    font-size: 14px;
+}}
+table.custom-table th {{
+    background-color: #f1f5f9;
+    color: #0f172a;
+    font-weight: 800;
+    text-align: left;
+    padding: 10px;
+    border-bottom: 2px solid #cbd5e1;
+}}
+table.custom-table td {{
+    padding: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}}
+table.custom-table tr:hover {{
+    background-color: #f8fafc;
+}}
 </style>
 """,
     unsafe_allow_html=True,
@@ -137,16 +161,24 @@ def normalize_confidence(series):
 
 def severity_badge(sev):
     sev = str(sev).strip().upper()
-    # Using inline styles for badges to ensure visibility
-    if sev == "LOW": return "background:#dbeafe;color:#1d4ed8", "LOW"
-    if sev == "MEDIUM": return "background:#fef3c7;color:#92400e", "MEDIUM"
-    if sev == "HIGH": return "background:#ffedd5;color:#9a3412", "HIGH"
-    if sev == "CRITICAL": return "background:#ffe4e6;color:#9f1239", "CRITICAL"
-    return "background:#fef3c7;color:#92400e", (sev if sev else "MEDIUM")
+    if sev == "LOW": return "sev-badge", "LOW", "#dbeafe", "#1d4ed8"
+    if sev == "MEDIUM": return "sev-badge", "MEDIUM", "#fef3c7", "#92400e"
+    if sev == "HIGH": return "sev-badge", "HIGH", "#ffedd5", "#9a3412"
+    if sev == "CRITICAL": return "sev-badge", "CRITICAL", "#ffe4e6", "#9f1239"
+    return "sev-badge", (sev if sev else "MEDIUM"), "#fef3c7", "#92400e"
 
 def pct_change(today_val, yday_val):
     if yday_val == 0: return 0.0 if today_val == 0 else 100.0
     return ((today_val - yday_val) / yday_val) * 100.0
+
+def compute_peak_2hr(hourly_dogs_dict):
+    arr = np.zeros(24)
+    for h in range(24): arr[h] = hourly_dogs_dict.get(h, 0)
+    best_h, best_sum = 0, -1
+    for h in range(24):
+        s = arr[h] + arr[(h + 1) % 24]
+        if s > best_sum: best_sum, best_h = s, h
+    return f"{best_h:02d}:00 - {(best_h+2)%24:02d}:00"
 
 def time_ago(ts: datetime, now_: datetime) -> str:
     secs = int(max(0, (now_ - ts).total_seconds()))
@@ -159,7 +191,6 @@ def time_ago(ts: datetime, now_: datetime) -> str:
     return f"{days}d ago"
 
 def delta_chip(pct):
-    # Using exact color values for clarity
     if pct is None or np.isnan(pct): return '<span style="color:#16a34a; font-weight:bold; font-size:12px">+0%</span>'
     if pct >= 0: return f'<span style="color:#b91c1c; font-weight:bold; font-size:12px">+{pct:.0f}%</span>'
     return f'<span style="color:#16a34a; font-weight:bold; font-size:12px">{pct:.0f}%</span>'
@@ -253,12 +284,13 @@ st.markdown(
 )
 
 # =========================
-# ROW 1: 3 KPI CARDS (Rectangular Shape)
+# ROW 1: 3 KPI CARDS (SEPARATED)
 # =========================
 k1, k2, k3 = st.columns(3, gap="large")
 
+# CARD 1
 with k1:
-    with st.container(border=True): # Shape 1
+    with st.container(border=True):
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">⛔</div>
@@ -268,8 +300,9 @@ with k1:
         <div style="font-weight:bold; color:#64748b; font-size:14px;">New Alerts</div>
         """, unsafe_allow_html=True)
 
+# CARD 2
 with k2:
-    with st.container(border=True): # Shape 2
+    with st.container(border=True):
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">📊</div>
@@ -279,8 +312,9 @@ with k2:
         <div style="font-weight:bold; color:#64748b; font-size:14px;">Total Stray Dogs Detected</div>
         """, unsafe_allow_html=True)
 
+# CARD 3
 with k3:
-    with st.container(border=True): # Shape 3
+    with st.container(border=True):
         st.markdown(f"""
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div style="font-size:28px;">🚨</div>
@@ -293,11 +327,11 @@ with k3:
 st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: 3 FEATURE CARDS (Rectangular Shape)
+# ROW 2: 3 FEATURE CARDS (SEPARATED)
 # =========================
 left, mid, right = st.columns(3, gap="large")
 
-# --- Shape 4: CAMERA ---
+# --- CARD 4 ---
 with left:
     with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
@@ -310,8 +344,8 @@ with left:
                 r = df_sorted.iloc[0]
                 uid = row_uid(r)
                 mins_ago = max(0, int((now - r["ts"]).total_seconds() // 60))
-                img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
                 
+                img_ok = (col_img is not None) and str(r.get(col_img, "")).startswith("http")
                 if img_ok:
                     st.markdown(f"""
                     <div class="thumb">
@@ -331,7 +365,7 @@ with left:
                 if st.button("Select This Event", key=f"sel_{uid}"):
                     st.session_state.selected_alert_uid = uid
 
-# --- Shape 5: ALERTS ---
+# --- CARD 5 ---
 with mid:
     with st.container(border=True):
         st.subheader("⛔ Active Alerts")
@@ -345,13 +379,13 @@ with mid:
                 for i in range(lim):
                     r = df_sorted.iloc[i]
                     uid = row_uid(r)
-                    sev_style, sev_txt = severity_badge(r[col_sev])
+                    cls, sev_txt, bg, col = severity_badge(r[col_sev])
                     
                     st.markdown(f"""
-                    <div style="padding:12px; background:rgba(255,255,255,0.5); border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
+                    <div style="padding:12px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                             <span style="font-weight:bold; font-size:15px;">{int(r[col_dogs])} Dog(s)</span>
-                            <span style="background:{sev_style.split(';')[0].split(':')[1]}; color:{sev_style.split(';')[1].split(':')[1]}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                            <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span class="small-muted" style="font-size:12px;">{str(r[col_loc])}</span>
@@ -363,7 +397,7 @@ with mid:
                     if st.button(f"View {str(r[col_id])}", key=f"btn_{uid}"):
                         st.session_state.selected_alert_uid = uid
 
-# --- Shape 6: PICTURE ---
+# --- CARD 6 ---
 with right:
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
@@ -374,16 +408,20 @@ with right:
             if sel is None:
                 st.info("Select an alert.")
             else:
-                sev_style, sev_txt = severity_badge(sel[col_sev])
+                cls, sev_txt, bg, col = severity_badge(sel[col_sev])
                 ts_txt = sel["ts"].strftime("%d/%m/%Y %H:%M")
-                conf_txt = f"{sel[col_conf]:.0f}%" if pd.notna(sel[col_conf]) else "—"
+                conf = sel[col_conf]
+                conf_txt = f"{conf:.0f}%" if pd.notna(conf) else "—"
 
-                st.markdown(f"""
-                <div style="margin-bottom:10px; display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:18px; font-weight:900;">{str(sel[col_id])}</span>
-                    <span style="background:{sev_style.split(';')[0].split(':')[1]}; color:{sev_style.split(';')[1].split(':')[1]}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(
+                    f"""
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                      <div style="font-weight:900">{str(sel[col_id])}</div>
+                      <span style="background:{bg}; color:{col}; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">{sev_txt}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
                 img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
                 if img_ok:
@@ -397,10 +435,11 @@ with right:
                 st.markdown(f"**Time:** {ts_txt}")
                 st.markdown(f"**Conf:** {conf_txt}")
 
+st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
+
 # =========================
-# ROW 3: Trends (Separate)
+# ROW 3: TRENDS & ANALYTICS (FIXED COLORS: theme=None + Black Text)
 # =========================
-st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
 with st.container(border=True):
     st.subheader("📈 Detection Trends & Analytics")
     mode = st.radio("Analytics View", ["24 Hours", "7 Days", "Severity Distribution"], horizontal=True)
@@ -414,8 +453,20 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        fig.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'))
-        st.plotly_chart(fig, use_container_width=True, theme=None)
+        
+        # FIXED: Forces black text and lines
+        fig.update_layout(
+            template="plotly_white", # Force white template (dark text)
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=300, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#000000'), # BLACK TEXT
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
+        )
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
     elif mode == "7 Days":
         start = now - timedelta(days=7)
@@ -425,8 +476,21 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        fig.update_layout(template="plotly_white", barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'))
-        st.plotly_chart(fig, use_container_width=True, theme=None)
+        
+        # FIXED: Forces black text and lines
+        fig.update_layout(
+            template="plotly_white",
+            barmode="group", 
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=300, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#000000'), # BLACK TEXT
+            xaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            yaxis=dict(showgrid=True, gridcolor='#e2e8f0', color='#000000'), # BLACK AXIS
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
+        )
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
 
     else:
         start = now - timedelta(days=7)
@@ -434,15 +498,28 @@ with st.container(border=True):
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
-        fig.update_layout(template="plotly_white", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', font=dict(color='#000000'))
-        st.plotly_chart(fig, use_container_width=True, theme=None)
+        
+        # FIXED: Forces black text
+        fig.update_layout(
+            template="plotly_white",
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=300, 
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#000000'), # BLACK TEXT
+            legend=dict(font=dict(color='#000000')) # BLACK LEGEND
+        )
+        st.plotly_chart(fig, use_container_width=True, theme=None) # THEME=NONE IS CRITICAL
+
+st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS (Separate)
+# ROW 4: RECENT EVENTS (CUSTOM HTML TABLE FOR LIGHT MODE)
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
     st.caption("Last 50 records (scrollable)")
+    
+    # Logic to prepare table data
     recent = df_sorted.head(50).copy()
     show = recent[[col_id, col_dogs, col_conf, col_sev, col_status]].copy()
     show.insert(0, "Timestamp", recent["ts"].dt.strftime("%b %d, %I:%M %p"))
@@ -452,6 +529,9 @@ with st.container(border=True):
         recent[col_conf].round(0).astype(int).astype(str) + "%",
         "—"
     )
-    # Custom HTML table for absolute Light Mode control
+    
+    # Convert to HTML with custom styling to force light mode
     table_html = show.to_html(classes="custom-table", index=False, border=0)
+    
+    # Wrap in a scrollable div
     st.markdown(f'<div style="height:380px; overflow-y:auto;">{table_html}</div>', unsafe_allow_html=True)
