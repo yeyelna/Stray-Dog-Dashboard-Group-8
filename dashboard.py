@@ -406,7 +406,7 @@ with right:
                 st.markdown(f"**Time:** {sel['ts'].strftime('%d/%m %H:%M')}")
                 st.markdown(f"**Conf:** {sel.get(col_conf, 0)}%")
 
-st.markdown('<div style="height:30px;"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
 
 # =========================
 # ROW 3: TRENDS & ANALYTICS (Restored & Styled)
@@ -425,7 +425,14 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["detections"], mode="lines+markers", name="Detections"))
         fig.add_trace(go.Scatter(x=hourly["hour"], y=hourly["dogs"], mode="lines+markers", name="Dogs"))
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        # Force BLACK text color for axes, labels, legend
+        fig.update_layout(
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=300, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#0f172a') # <--- FORCE DARK TEXT
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     elif mode == "7 Days":
@@ -436,7 +443,15 @@ with st.container(border=True):
         fig = go.Figure()
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["detections"], name="Detections"))
         fig.add_trace(go.Bar(x=daily["day"].astype(str), y=daily["dogs"], name="Dogs"))
-        fig.update_layout(barmode="group", margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        # Force BLACK text color
+        fig.update_layout(
+            barmode="group", 
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=300, 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#0f172a') # <--- FORCE DARK TEXT
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     else:
@@ -445,7 +460,13 @@ with st.container(border=True):
         sev = d[col_sev].astype(str).str.upper().replace({"": "MEDIUM"}).fillna("MEDIUM")
         counts = sev.value_counts().reindex(["CRITICAL", "HIGH", "MEDIUM", "LOW"]).fillna(0).astype(int)
         fig = go.Figure(data=[go.Pie(labels=list(counts.index), values=list(counts.values), hole=0.6)])
-        fig.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=300, paper_bgcolor='rgba(0,0,0,0)')
+        # Force BLACK text color
+        fig.update_layout(
+            margin=dict(l=10, r=10, t=10, b=10), 
+            height=300, 
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#0f172a') # <--- FORCE DARK TEXT
+        )
         st.plotly_chart(fig, use_container_width=True)
 
 st.markdown('<div style="height:20px;"></div>', unsafe_allow_html=True)
