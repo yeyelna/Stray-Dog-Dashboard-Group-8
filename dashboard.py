@@ -20,14 +20,14 @@ SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
 
 # ROW 2: FIXED HEIGHT
-# We only use ONE container height now. 
-# We remove the inner calculations because the whole card will handle the scroll.
+# We use this height for the columns. Since we removed the outer container, 
+# this single container becomes the Card + Scroll Area.
 ROW2_CARD_HEIGHT_PX = 560           
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS 
+# CSS (Fixed to prevent double borders)
 # =========================
 st.markdown(
     f"""
@@ -43,7 +43,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 *{{overflow-wrap:anywhere;word-break:break-word}}
 
 /* ====== OUTER BORDER STYLE ====== */
-/* This targets st.container(border=True) AND st.container(height=...) */
+/* This targets any container with border=True OR height=... */
 [data-testid="stVerticalBlockBorderWrapper"]{{
   background:#faf7f2 !important;
   border:1.6px solid rgba(15,23,42,.35) !important;   
@@ -51,15 +51,12 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
   box-shadow:0 6px 18px rgba(15,23,42,.06) !important;
   padding:16px !important;
   margin:0 !important;
-  overflow:hidden !important; /* Ensures content stays inside rounded corners */
+  overflow:hidden !important;
 }}
-/* Clean up inner spacing */
+/* Remove default Streamlit inner gaps to prevent double-frame look */
 [data-testid="stVerticalBlockBorderWrapper"] > div{{
   border:none !important;
-  background:transparent !important;
-  box-shadow:none !important;
   padding:0 !important;
-  margin:0 !important;
 }}
 
 /* header bar */
@@ -77,8 +74,6 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
   border:1px solid rgba(30,41,59,.18);
   background:#ffffff;font-weight:900
 }}
-.pill-green{{background:#ecfdf5 !important;border-color:#bbf7d0 !important;color:#166534 !important}}
-.pill-green *{{color:#166534 !important}}
 .pill-red{{background:#fee2e2 !important;border-color:#fecaca !important;color:#991b1b !important}}
 .pill-red *{{color:#991b1b !important}}
 
@@ -156,7 +151,6 @@ def parse_ts(x):
     if s == "":
         return pd.NaT
 
-    # dd/mm/yyyy HH:MM
     try:
         if "/" in s and ":" in s and "t" not in s.lower():
             dt = datetime.strptime(s, "%d/%m/%Y %H:%M")
@@ -164,7 +158,6 @@ def parse_ts(x):
     except:
         pass
 
-    # ISO
     try:
         dt = parser.isoparse(s)
         if dt.tzinfo is None:
@@ -339,7 +332,7 @@ def get_selected_row():
     return df_sorted[m].iloc[0]
 
 # =========================
-# KPI (today vs yesterday)
+# KPI
 # =========================
 now = datetime.now(TZ)
 today = now.date()
@@ -355,9 +348,6 @@ dogs_yday = int(yday_df[col_dogs].sum())
 hp_today = int(today_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]).sum())
 hp_yday = int(yday_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]).sum())
 
-# =========================
-# HEADER
-# =========================
 st.markdown(
     f"""
 <div class="headerbar">
@@ -378,9 +368,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# =========================
-# ROW 1: KPI
-# =========================
 k1, k2, k3 = st.columns(3)
 
 with k1:
@@ -428,13 +415,13 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# ROW 2: SINGLE BORDER / EQUAL HEIGHT / SINGLE SCROLL CONTEXT
+# ROW 2: SINGLE BORDER & SINGLE SCROLL
 # =========================
 left, mid, right = st.columns([1.05, 0.95, 1.05])
 
 # --- LEFT COLUMN (Camera) ---
 with left:
-    # Use ONLY height=... (CSS gives it the border). No outer 'with st.container(border=True)'
+    # FIXED: Only use ONE container. height=... creates the border AND the scroll area.
     with st.container(height=ROW2_CARD_HEIGHT_PX):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
@@ -486,8 +473,8 @@ with left:
 
 # --- MIDDLE COLUMN (Alerts) ---
 def render_alert_list(data):
-    # FIXED: Remove the inner st.container. 
-    # Just render items directly; the PARENT container handles the scrolling.
+    # FIXED: Removed the inner st.container(height=...). 
+    # Items now render directly into the MAIN card, so they scroll with the card.
     if len(data) == 0:
         st.info("No alerts.")
         return
@@ -530,7 +517,7 @@ def render_alert_list(data):
             st.session_state.selected_alert_uid = uid
 
 with mid:
-    # Use ONLY height=... (CSS gives it the border)
+    # FIXED: Single container for the whole column card
     with st.container(height=ROW2_CARD_HEIGHT_PX):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
@@ -538,7 +525,7 @@ with mid:
 
 # --- RIGHT COLUMN (Picture) ---
 with right:
-    # Use ONLY height=... (CSS gives it the border)
+    # FIXED: Single container for the whole column card
     with st.container(height=ROW2_CARD_HEIGHT_PX):
         st.subheader("🖼️ Active Alert Picture")
         sel = get_selected_row()
