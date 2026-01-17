@@ -271,7 +271,7 @@ st.markdown(
     f"""
     <div class="header-area">
         <div class="main-title">🐕 Stray Dog Detection System</div>
-        <div style="font-size:16px; color:#475569;">Real-Time AI Detection Monitoring</div>
+        <div style="font-size:16px; color:#3b2303;">Real-Time AI Detection Monitoring</div>
     </div>
     """,
     unsafe_allow_html=True,
