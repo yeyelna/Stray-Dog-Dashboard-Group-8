@@ -575,7 +575,7 @@ with right:
               <span class="small-muted">📍 {str(sel[col_loc])} • 🕒 {ts_txt}</span>
             </div>
             """,
-            unsafe july_allow_html=True,
+            unsafe_allow_html=True,
         )
 
         img_ok = (col_img is not None) and str(sel.get(col_img, "")).startswith("http")
