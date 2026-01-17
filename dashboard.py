@@ -15,15 +15,14 @@ TZ = ZoneInfo("Asia/Kuala_Lumpur")
 SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSxyGtEAyftAfaY3M3H_sMvnA6oYcTsVjxMLVznP7SXvGA4rTXfrvzESYgSND7Z6o9qTrD-y0QRyvPo/pub?gid=0&single=true&output=csv"
 REFRESH_SEC = 8
 
-# Card Configuration
 SINGLE_CAMERA_NAME = "WEBCAM"
 SINGLE_LOCATION_NAME = "WEBCAM"
-SCROLL_AREA_HEIGHT = 440  # Height of the scrolling area inside the card
+SCROLL_AREA_HEIGHT = 440
 
 st_autorefresh(interval=REFRESH_SEC * 1000, key="auto_refresh")
 
 # =========================
-# CSS STYLING
+# CSS (Purely for Text/Badges - No Border Hacks)
 # =========================
 st.markdown(
     f"""
@@ -34,36 +33,10 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .block-container{{padding-top:1rem;padding-bottom:1.2rem;max-width:1400px}}
 .stApp, .stApp *{{color:#0f172a !important}}
 
-/* ============================================================
-   1. THE OUTER CARD (Visible Border)
-   Targeting the main containers with borders.
-============================================================ */
-[data-testid="stVerticalBlockBorderWrapper"] {{
-    border: 2px solid rgba(15, 23, 42, 0.2) !important; /* Clearly visible border */
-    border-radius: 20px !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
-    padding: 16px !important;
-    margin-bottom: 1rem !important;
-}}
-
-/* ============================================================
-   2. THE INNER SCROLL BOX (Invisible Border)
-   This rule says: "If a border-wrapper is inside another border-wrapper,
-   remove its border and background."
-============================================================ */
-[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlockBorderWrapper"] {{
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}}
-
-/* Header Bar Style */
+/* Header Bar */
 .headerbar{{
-  background:#ffffff;border:2px solid rgba(15,23,42,0.15);
-  border-radius:22px;box-shadow:0 6px 18px rgba(15,23,42,.06);
+  background:#ffffff;border:1px solid rgba(15,23,42,0.15);
+  border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.02);
   padding:14px 16px;margin-bottom:12px
 }}
 .title{{font-size:22px;font-weight:900;margin-bottom:2px}}
@@ -79,7 +52,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .pill-red{{background:#fee2e2 !important;border-color:#fecaca !important;color:#991b1b !important}}
 .pill-red *{{color:#991b1b !important}}
 
-/* KPI & Chart Styles */
+/* KPI Styles */
 .kpi-ico{{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900}}
 .kpi-top{{display:flex;align-items:center;justify-content:space-between}}
 .kpi-val{{font-size:34px;font-weight:900;margin-top:6px;color:#0f172a !important}}
@@ -88,7 +61,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .delta-pos{{background:#fee2e2 !important;color:#991b1b !important}}
 .delta-neg{{background:#dcfce7 !important;color:#166534 !important}}
 
-/* Detection Card Styles */
+/* Thumbnails */
 .thumb{{border-radius:16px;overflow:hidden;border:1px solid rgba(30,41,59,.16);background:#ffffff;position:relative}}
 .thumb img{{display:block;width:100%;height:220px;object-fit:cover}}
 .overlay{{position:absolute;left:10px;top:10px;display:flex;gap:8px}}
@@ -98,6 +71,8 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .ov-det{{position:absolute;left:10px;bottom:10px;background:#f59e0b;color:#0f172a !important;font-weight:900;font-size:12px;padding:6px 10px;border-radius:10px;display:flex;align-items:center;gap:6px}}
 .thumb-title{{font-weight:900;margin-top:10px}}
 .thumb-sub{{margin-top:-2px;color:#64748b !important}}
+
+/* Badges */
 .badge{{font-size:12px;font-weight:900;padding:6px 10px;border-radius:10px;display:inline-block}}
 .badge-low{{background:#dbeafe !important;color:#1d4ed8 !important}}
 .badge-med{{background:#fef3c7 !important;color:#92400e !important}}
@@ -105,7 +80,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 .badge-crit{{background:#ffe4e6 !important;color:#9f1239 !important}}
 .badge-time{{background:#f1f5f9 !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.12) !important}}
 
-/* Button Override */
+/* Buttons */
 .stButton > button{{width:100%;background:#ffffff !important;color:#0f172a !important;border:1px solid rgba(30,41,59,.18) !important;border-radius:12px !important;font-weight:900 !important;box-shadow:none !important;}}
 .stButton > button:hover{{background:#f8fafc !important;border-color:rgba(30,41,59,.30) !important;}}
 </style>
@@ -114,7 +89,7 @@ html,body,[class*="css"]{{font-family:Inter,system-ui,-apple-system,Segoe UI,Rob
 )
 
 # =========================
-# HELPERS & DATA
+# HELPERS
 # =========================
 def _clean_cols(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
@@ -197,7 +172,7 @@ if raw.empty:
     st.error("No data loaded from Google Sheets CSV.")
     st.stop()
 
-# Auto-detect columns
+# Columns
 col_ts = pick_col(raw, ["timestamp", "time", "datetime", "date_time"])
 col_id = pick_col(raw, ["detection_id", "det_id", "id", "event_id"])
 col_loc = pick_col(raw, ["location", "area", "zone"])
@@ -218,7 +193,7 @@ df = raw.copy()
 df["ts"] = df[col_ts].apply(parse_ts)
 df = df.dropna(subset=["ts"]).copy()
 
-# Fill defaults
+# Defaults
 if col_id is None: df["detection_id"] = ["DET-" + str(i).zfill(6) for i in range(1, len(df) + 1)]; col_id = "detection_id"
 if col_cam is None: df["camera"] = SINGLE_CAMERA_NAME; col_cam = "camera"
 if col_camtype is None: df["camera_type"] = SINGLE_CAMERA_NAME; col_camtype = "camera_type"
@@ -241,7 +216,7 @@ df["date_local"] = df["ts"].dt.date
 df["hour"] = df["ts"].dt.hour
 df_sorted = df.sort_values("ts", ascending=False).reset_index(drop=True)
 
-# State Management
+# State
 def row_uid(r): return f"{str(r[col_id])}__{r['ts'].isoformat()}"
 if "selected_alert_uid" not in st.session_state: st.session_state.selected_alert_uid = ""
 if st.session_state.selected_alert_uid == "" and len(df_sorted) > 0:
@@ -254,7 +229,7 @@ def get_selected_row():
     if m.sum() == 0: return None
     return df_sorted[m].iloc[0]
 
-# Metrics
+# KPI Calculations
 now = datetime.now(TZ)
 today = now.date()
 yday = (now - timedelta(days=1)).date()
@@ -268,7 +243,7 @@ hp_today = int(today_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL
 hp_yday = int(yday_df[col_sev].astype(str).str.upper().isin(["HIGH", "CRITICAL"]).sum())
 
 # =========================
-# UI: HEADER
+# HEADER
 # =========================
 st.markdown(
     f"""
@@ -291,9 +266,9 @@ st.markdown(
 )
 
 # =========================
-# UI: ROW 1 (KPI)
+# ROW 1: KPI (Cards)
 # =========================
-k1, k2, k3 = st.columns(3)
+k1, k2, k3 = st.columns(3, gap="medium")
 with k1:
     with st.container(border=True):
         st.markdown(f"""<div class="kpi-top"><div class="kpi-ico" style="background:#fee2e2;color:#b91c1c">⛔</div>{delta_chip(pct_change(new_today, new_yday))}</div><div class="kpi-val">{new_today}</div><div class="kpi-lab">New Alerts</div>""", unsafe_allow_html=True)
@@ -307,19 +282,20 @@ with k3:
 st.markdown('<div class="row-gap"></div>', unsafe_allow_html=True)
 
 # =========================
-# UI: ROW 2 (Features with Single Outer Border)
+# ROW 2: MAIN FEATURES
 # =========================
-left, mid, right = st.columns([1.05, 0.95, 1.05])
+# We use gap="medium" to visually separate the columns.
+left, mid, right = st.columns([1, 1, 1], gap="medium")
 
-# --- 1. CAMERA CARD ---
+# --- 1. CAMERA ---
 with left:
-    # Outer Border (Card)
+    # Outer Card (Border = True)
     with st.container(border=True):
         st.subheader("📷 Camera Feeds & Snapshots")
         st.caption("Latest detection (single feed)")
         
-        # Inner Scrolling (CSS hides this border)
-        with st.container(height=SCROLL_AREA_HEIGHT):
+        # Inner Scroll Area (Height + Border=False)
+        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No detection records.")
             else:
@@ -358,15 +334,15 @@ with left:
                 if st.button("Select this detection", key=f"single_select__{uid}", use_container_width=True):
                     st.session_state.selected_alert_uid = uid
 
-# --- 2. ALERTS CARD ---
+# --- 2. ALERTS ---
 with mid:
-    # Outer Border (Card)
+    # Outer Card (Border = True)
     with st.container(border=True):
         st.subheader("⛔ Active Alerts")
         st.caption("Scroll to view older detections")
 
-        # Inner Scrolling (CSS hides this border)
-        with st.container(height=SCROLL_AREA_HEIGHT):
+        # Inner Scroll Area (Height + Border=False)
+        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             if len(df_sorted) == 0:
                 st.info("No alerts.")
             else:
@@ -407,14 +383,14 @@ with mid:
                     if st.button(f"View • {str(r[col_id])}", key=f"view__{uid}", use_container_width=True):
                         st.session_state.selected_alert_uid = uid
 
-# --- 3. PICTURE CARD ---
+# --- 3. PICTURE ---
 with right:
-    # Outer Border (Card)
+    # Outer Card (Border = True)
     with st.container(border=True):
         st.subheader("🖼️ Active Alert Picture")
         
-        # Inner Scrolling (CSS hides this border)
-        with st.container(height=SCROLL_AREA_HEIGHT):
+        # Inner Scroll Area (Height + Border=False)
+        with st.container(height=SCROLL_AREA_HEIGHT, border=False):
             sel = get_selected_row()
             if sel is None:
                 st.info("Please select an alert to view the snapshot.")
@@ -503,7 +479,7 @@ with st.container(border=True):
         st.markdown(f"<div style='text-align:center;padding:14px 0 4px 0'><div class='small-muted'>Avg Daily Detections</div><div style='font-weight:900;font-size:22px;color:#0f172a !important'>{avg_daily}</div></div>", unsafe_allow_html=True)
 
 # =========================
-# ROW 4: RECENT EVENTS
+# ROW 4: RECENT
 # =========================
 with st.container(border=True):
     st.subheader("🧾 Recent Detection Events")
